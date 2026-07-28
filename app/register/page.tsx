@@ -1,0 +1,86 @@
+// Reusable styled form controls from the project's UI component folder.
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+// Next.js Link navigates to another route without a full page reload.
+import Link from "next/link";
+
+// This default export is the page Next.js renders for the /register URL.
+export default function RegisterPage() {
+  return (
+    // Full-height page that centres the white form card on a light-gray background.
+    <main className="min-h-screen flex items-center justify-center bg-gray-100">
+
+      {/* w-full helps the card fit small screens; max-w-md limits its width on large screens. */}
+      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
+
+        {/* The page heading and its supporting text. */}
+        <h1 className="text-3xl font-bold text-center">
+          Create Account
+        </h1>
+
+        <p className="text-center text-gray-500 mt-2">
+          Start building your child's Tarbiyah Planner
+        </p>
+
+        {/* The form layout: space-y-5 adds vertical space between its direct children.
+            It only displays fields for now; it does not submit data yet. */}
+        <form className="mt-8 space-y-5">
+
+          {/* The name field is a normal text input because it has no type prop. */}
+          <div>
+            <label className="font-medium">
+              Parent Name
+            </label>
+
+            <Input
+              placeholder="Enter your name"
+            />
+          </div>
+
+          {/* Email input: type=email lets the browser validate an email-shaped value. */}
+          <div>
+            <label className="font-medium">
+              Email
+            </label>
+
+            <Input
+              type="email"
+              placeholder="Enter your email"
+            />
+          </div>
+
+          {/* Password input: type=password hides the characters a user enters. */}
+          <div>
+            <label className="font-medium">
+              Password
+            </label>
+
+            <Input
+              type="password"
+              placeholder="Enter your password"
+            />
+          </div>
+
+          {/* w-full makes this reusable Button span the available card width. */}
+          <Button className="w-full">
+            Register
+          </Button>
+
+        </form>
+
+        {/* Text shown below the form. {" "} inserts one explicit space before the Link. */}
+        <p className="text-center text-sm mt-6">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="text-blue-600 hover:underline"
+          >
+            Login
+          </Link>
+        </p>
+
+      </div>
+
+    </main>
+  );
+}
