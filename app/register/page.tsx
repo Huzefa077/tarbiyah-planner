@@ -19,7 +19,7 @@ export default function RegisterPage() {
         </h1>
 
         <p className="text-center text-gray-500 mt-2">
-          Start building your child's Tarbiyah Planner
+          Start building your child&apos;s Tarbiyah Planner
         </p>
 
         {/* The form layout: space-y-5 adds vertical space between its direct children.
