@@ -1,19 +1,115 @@
-// Reusable styled form controls from the project's UI component folder.
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-// Next.js Link navigates to another route without a full page reload.
+"use client";
+
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-// This default export is the page Next.js renders for the /login URL.
-export default function RegisterPage() {
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export default function LoginPage() {
+    const router = useRouter();
+
+    // Store the values entered by the user.
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    // Used while the login request is running.
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Stores an error returned by the backend.
+    const [error, setError] = useState("");
+
+    async function handleSubmit(
+        event: FormEvent<HTMLFormElement>
+    ) {
+        event.preventDefault();
+
+        // Clear any previous error.
+        setError("");
+
+        setIsLoading(true);
+
+        try {
+            /*
+            Send the login data to our backend.
+
+            POST /api/auth/login
+            */
+            const response = await fetch(
+                "/api/auth/login",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+
+                    body: JSON.stringify({
+                        email,
+                        password,
+                    }),
+                }
+            );
+
+            // Read the JSON response from the API.
+            const data = await response.json();
+
+            /*
+            If login failed, display the message returned
+            by the backend.
+            */
+            if (!response.ok) {
+                setError(
+                    data.message ||
+                        "Login failed."
+                );
+
+                return;
+            }
+
+            /*
+            Login succeeded.
+
+            The backend has already stored the JWT in the
+            HTTP-only auth_token cookie.
+
+            We don't manually store the token in React,
+            localStorage, or sessionStorage.
+            */
+
+            // Send the authenticated user to the dashboard.
+            router.push("/dashboard");
+
+            // Refresh the route so server-side code can
+            // immediately see the new authentication cookie.
+            router.refresh();
+
+        } catch (error) {
+
+            /*
+            This catches network errors where the browser
+            could not reach the API at all.
+            */
+            console.error(
+                "Login request failed:",
+                error
+            );
+
+            setError(
+                "Unable to connect to the server."
+            );
+
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
-        // Full-height page that centres the white form card on a light-gray background.
         <main className="min-h-screen flex items-center justify-center bg-gray-100">
 
-            {/* w-full helps the card fit small screens; max-w-md limits its width on large screens. */}
             <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
 
-                {/* The page heading and its supporting text. */}
                 <h1 className="text-3xl font-bold text-center">
                     Login
                 </h1>
@@ -22,11 +118,12 @@ export default function RegisterPage() {
                     Welcome back!
                 </p>
 
-                {/* The form layout: space-y-5 adds vertical space between its direct children.
-            It only displays fields for now; it does not submit data yet. */}
-                <form className="mt-8 space-y-5">
+                <form
+                    className="mt-8 space-y-5"
+                    onSubmit={handleSubmit}
+                >
 
-                    {/* Email input: type=email lets the browser validate an email-shaped value. */}
+                    {/* Email */}
                     <div>
                         <label className="font-medium">
                             Email
@@ -35,10 +132,16 @@ export default function RegisterPage() {
                         <Input
                             type="email"
                             placeholder="Enter your email"
+                            value={email}
+                            onChange={(event) =>
+                                setEmail(
+                                    event.target.value
+                                )
+                            }
                         />
                     </div>
 
-                    {/* Password input: type=password hides the characters a user enters. */}
+                    {/* Password */}
                     <div>
                         <label className="font-medium">
                             Password
@@ -47,19 +150,38 @@ export default function RegisterPage() {
                         <Input
                             type="password"
                             placeholder="Enter your password"
+                            value={password}
+                            onChange={(event) =>
+                                setPassword(
+                                    event.target.value
+                                )
+                            }
                         />
                     </div>
 
-                    {/* w-full makes this reusable Button span the available card width. */}
-                    <Button className="w-full">
-                        Login
+                    {/* Error message */}
+                    {error && (
+                        <p className="text-sm text-red-600">
+                            {error}
+                        </p>
+                    )}
+
+                    {/* Submit */}
+                    <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading
+                            ? "Logging in..."
+                            : "Login"}
                     </Button>
 
                 </form>
 
-                {/* Text shown below the form. {" "} inserts one explicit space before the Link. */}
                 <p className="text-center text-sm mt-6">
-          Don&apos;t have an account?{" "}
+                    Don&apos;t have an account?{" "}
+
                     <Link
                         href="/register"
                         className="text-blue-600 hover:underline"

@@ -2,6 +2,7 @@
 
 import {
     createContext,
+    useCallback,
     useState,
     ReactNode,
     Dispatch,
@@ -9,78 +10,121 @@ import {
 } from "react";
 
 /*
-==========================================================
 Shared Planner State
-----------------------------------------------------------
-This file stores data that multiple pages need.
 
 Sections Page
-        ↓
+↓
 Configure Page
-        ↓
+↓
 Preview Page
-
-Instead of each page having its own copy,
-they all read the same data from here.
-==========================================================
 */
 
-interface PlannerContextType {
-    // Selected sections chosen by the user.
-    selectedSections: string[];
-
-    // Function to update selected sections.
-    setSelectedSections: Dispatch<SetStateAction<string[]>>;
-
-    // Activities for every section.
-    //
-    // Example:
-    // {
-    //   "Learn & Read": ["Quran Reading", "Homework"],
-    //   "Exercise": ["Running"]
-    // }
-    activities: {
-        [key: string]: string[];
-    };
-
-    // Function to update activities.
-    setActivities: Dispatch<
-        SetStateAction<{
-            [key: string]: string[];
-        }>
-    >;
+export interface PlannerSection {
+    id: string;
+    name: string;
+    isBlank: boolean;
+    isDefault: boolean;
 }
 
-// Create the Context.
+export interface PlannerActivity {
+    id: string;
+    name: string;
+    isBlank: boolean;
+}
+
+interface PlannerContextType {
+    // Database ID of the planner currently being edited. Null means a new planner.
+    editingPlannerId: number | null;
+    setEditingPlannerId: Dispatch<SetStateAction<number | null>>;
+
+    // The title is kept while moving between the planner's client-side steps.
+    plannerTitle: string;
+    setPlannerTitle: Dispatch<SetStateAction<string>>;
+
+    // All available sections.
+    availableSections: PlannerSection[];
+
+    // Update available sections.
+    setAvailableSections: Dispatch<
+        SetStateAction<PlannerSection[]>
+    >;
+
+    // IDs of the selected sections.
+    selectedSections: string[];
+
+    // Update selected section IDs.
+    setSelectedSections: Dispatch<
+        SetStateAction<string[]>
+    >;
+
+    // Activities grouped by section ID.
+    activities: Record<string, PlannerActivity[]>;
+
+    // Update activities.
+    setActivities: Dispatch<
+        SetStateAction<Record<string, PlannerActivity[]>>
+    >;
+
+    // Clears old planner data before starting a completely new planner.
+    resetPlanner: () => void;
+}
+
+// Create Context.
 export const PlannerContext =
     createContext<PlannerContextType | null>(null);
 
-// Props for Provider.
 interface PlannerProviderProps {
     children: ReactNode;
 }
 
-// Provider Component.
 export function PlannerProvider({
     children,
 }: PlannerProviderProps) {
 
-    // Selected sections.
+    // Available sections.
+    const [availableSections, setAvailableSections] =
+        useState<PlannerSection[]>([]);
+
+    // Selected section IDs.
     const [selectedSections, setSelectedSections] =
         useState<string[]>([]);
 
-    // Activities of every section.
-    const [activities, setActivities] = useState<{
-        [key: string]: string[];
-    }>({});
+    // Activities grouped by section ID.
+    const [activities, setActivities] =
+        useState<Record<string, PlannerActivity[]>>({});
+
+    const [editingPlannerId, setEditingPlannerId] =
+        useState<number | null>(null);
+
+    const [plannerTitle, setPlannerTitle] = useState("");
+
+    const resetPlanner = useCallback(() => {
+        setAvailableSections([]);
+        setSelectedSections([]);
+        setActivities({});
+        setEditingPlannerId(null);
+        setPlannerTitle("");
+    }, []);
 
     return (
         <PlannerContext.Provider
             value={{
+                editingPlannerId,
+                setEditingPlannerId,
+
+                plannerTitle,
+                setPlannerTitle,
+
+                availableSections,
+                setAvailableSections,
+
                 selectedSections,
                 setSelectedSections,
+
                 activities,
                 setActivities,
+
+                resetPlanner,
             }}
         >
             {children}

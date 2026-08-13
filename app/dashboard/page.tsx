@@ -1,77 +1,75 @@
-// Import the project's reusable Button component.
-import { Button } from "@/components/ui/button";
-// Import Next.js Link for navigation to another route.
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-// A default export from app/dashboard/page.tsx is displayed at the /dashboard URL.
-export default function DashboardPage() {
+import { Button } from "@/components/ui/button";
+import { Planner } from "@/database/entities/Planner";
+import { getCurrentUser } from "@/lib/auth";
+import { connectDatabase } from "@/lib/database";
+
+// This is a server page for the /dashboard route.
+// It can safely read the HTTP-only authentication cookie through getCurrentUser().
+export default async function DashboardPage() {
+  const user = await getCurrentUser();
+
+  // A visitor without a valid login cookie cannot view the dashboard.
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Load this user's planners. The user condition ensures parents never see
+  // planners that belong to another account.
+  const database = await connectDatabase();
+  const planners = await database.getRepository(Planner).find({
+    where: { user: { id: user.id } },
+    order: { createdAt: "DESC" },
+  });
+
   return (
-    // Page layout:
-    // min-h-screen = make this area at least as tall as the browser window.
-    // bg-gray-100 = use Tailwind's very light gray background colour.
-    // p-8 = add 32px of padding on all four inside edges.
     <main className="min-h-screen bg-gray-100 p-8">
-
-      {/* Content wrapper
-          max-w-5xl = do not let this content become wider than Tailwind's 5xl size
-          mx-auto = use automatic left/right margins, which centres a limited-width element */}
-      <div className="max-w-5xl mx-auto">
-
-        {/* Greeting heading
-            text-4xl = use Tailwind's large 4xl font size
-            font-bold = use a bold font weight
-            The name is hard-coded for now; it will later come from the logged-in user. */}
+      <div className="mx-auto max-w-5xl">
         <h1 className="text-4xl font-bold">
-          Assalamu Alaikum 👋
+          Assalamu Alaikum, {user.fullName}
         </h1>
 
-        {/* Welcome text
-            text-gray-600 = use a medium-dark gray text colour
-            mt-2 = add 8px of margin above this paragraph */}
-        <p className="text-gray-600 mt-2">
-          Welcome back, Huzaifa
+        <p className="mt-2 text-gray-600">
+          Welcome back. Create a planner to begin tracking daily routines.
         </p>
 
-        {/* Action area
-            mt-10 = add 40px of margin above this area */}
         <div className="mt-10">
-
-          {/* Clicking this link takes the user to the /planner page. */}
-          <Link href="/planner">
-            <Button>
-              + Create Planner
-            </Button>
-          </Link>
-
+          {/* Base UI uses render (rather than asChild) to style a Next.js Link as a button. */}
+          <Button render={<Link href="/planner" />} nativeButton={false}>
+            + Create Planner
+          </Button>
         </div>
 
-        {/* Recent-planners card
-            mt-12 = add 48px of margin above the card
-            rounded-xl = give the card noticeably rounded corners
-            bg-white = give the card a white background
-            shadow = add a subtle shadow around the card
-            p-6 = add 24px of padding inside the card
-            It currently shows an empty-state message because no data is connected yet. */}
-        <div className="mt-12 rounded-xl bg-white shadow p-6">
+        <section className="mt-12 rounded-xl bg-white p-6 shadow">
+          <h2 className="text-2xl font-semibold">Recent Planners</h2>
 
-          {/* Card heading
-              text-2xl = use Tailwind's 2xl font size
-              font-semibold = use a weight between normal and bold */}
-          <h2 className="text-2xl font-semibold">
-            Recent Planners
-          </h2>
-
-          {/* Empty-state message
-              text-gray-500 = use a medium gray text colour
-              mt-3 = add 12px of margin above this paragraph */}
-          <p className="text-gray-500 mt-3">
-            No planners created yet.
-          </p>
-
-        </div>
-
+          {planners.length === 0 ? (
+            <p className="mt-3 text-gray-500">No planners created yet.</p>
+          ) : (
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {planners.map((planner) => (
+                <li
+                  key={planner.id}
+                  className="rounded-lg border border-gray-200 p-4"
+                >
+                  <p className="font-semibold">{planner.title}</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Created {planner.createdAt.toLocaleDateString()}
+                  </p>
+                  <Link
+                    href={`/dashboard/planners/${planner.id}`}
+                    className="mt-3 inline-block text-sm font-medium text-blue-700 hover:underline"
+                  >
+                    View planner
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
-
     </main>
   );
 }

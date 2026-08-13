@@ -1,18 +1,58 @@
-"use client"; // This page runs in the browser and can use interactive React features.
+"use client";
 
-import { useContext, useState } from "react";
+import {
+    useContext,
+    useEffect,
+    useState,
+} from "react";
+
 import { useRouter } from "next/navigation";
-import { PlannerContext } from "@/context/PlannerContext";
+
+import {
+    PlannerContext,
+    PlannerSection,
+} from "@/context/PlannerContext";
+
 import { Button } from "@/components/ui/button";
 
-// Built-in sections provided by the application.
-// These cannot be deleted by the user.
-const defaultSections = [
-    "Learn & Read",
-    "Good Deeds",
-    "Exercise",
-    "Family Time",
+const DEFAULT_SECTIONS: PlannerSection[] = [
+    {
+        id: "prayers",
+        name: "Prayer",
+        isBlank: false,
+        isDefault: true,
+    },
+    {
+        id: "learn-read",
+        name: "Learn & Read",
+        isBlank: false,
+        isDefault: true,
+    },
+    {
+        id: "good-deeds",
+        name: "Good Deeds",
+        isBlank: false,
+        isDefault: true,
+    },
+    {
+        id: "exercise",
+        name: "Exercise",
+        isBlank: false,
+        isDefault: true,
+    },
+    {
+        id: "family-time",
+        name: "Family Time",
+        isBlank: false,
+        isDefault: true,
+    },
 ];
+
+function createId(prefix: string) {
+    return `${prefix}-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 9)}`;
+}
 
 export default function SectionsPage() {
     const planner = useContext(PlannerContext);
@@ -21,86 +61,150 @@ export default function SectionsPage() {
         throw new Error("PlannerContext not found");
     }
 
-    const { selectedSections, setSelectedSections } = planner;
+    const {
+        availableSections,
+        setAvailableSections,
+        selectedSections,
+        setSelectedSections,
+        setActivities,
+    } = planner;
+    
     const router = useRouter();
 
-    // Stores every section shown in the list.
-    // Starts with the built-in sections but later also contains custom ones.
-    const [availableSections, setAvailableSections] =
-        useState<string[]>(defaultSections);
+    useEffect(() => {
+        if (availableSections.length === 0) {
+            setAvailableSections(DEFAULT_SECTIONS);
+        }
+    }, [
+        availableSections.length,
+        setAvailableSections,
+    ]);
+    
 
-    // Stores the current value typed into the custom section textbox.
+    // Stores the text typed into the custom section input.
     const [customSection, setCustomSection] = useState("");
 
-    // Select or unselect a section.
-    // Users can select a maximum of 4 sections.
-    function toggleSection(section: string) {
-        if (selectedSections.includes(section)) {
-            // Remove the section if it is already selected.
+    // Select / unselect a section.
+    function toggleSection(sectionId: string) {
+        if (selectedSections.includes(sectionId)) {
             setSelectedSections(
                 selectedSections.filter(
-                    (item) => item !== section
+                    (id) => id !== sectionId
                 )
             );
-        } else {
-           // Users can select a maximum of 3 sections.
-// Prayer Routine is already included, making 4 sections in total.
-if (selectedSections.length >= 3) return;
-            // Add the newly selected section.
-            setSelectedSections([
-                ...selectedSections,
-                section,
-            ]);
+
+            return;
         }
+
+        if (selectedSections.length >= 4) return;
+
+        setSelectedSections([
+            ...selectedSections,
+            sectionId,
+        ]);
     }
 
-    // Delete a custom section.
-    // Also remove it from the selected list if it was checked.
-    function removeSection(section: string) {
+    // Delete a section.
+    function removeSection(sectionId: string) {
+        // Remove it from available sections.
         setAvailableSections(
             availableSections.filter(
-                (item) => item !== section
+                (section) => section.id !== sectionId
             )
         );
 
+        // Remove it from selected sections.
         setSelectedSections(
             selectedSections.filter(
-                (item) => item !== section
+                (id) => id !== sectionId
             )
         );
+
+        // Remove activities belonging to this section.
+        setActivities((currentActivities) => {
+
+            const updatedActivities = {
+                ...currentActivities,
+            };
+
+            delete updatedActivities[sectionId];
+
+            return updatedActivities;
+        });
     }
 
-    // Create a new custom section.
+    // Add a normal custom section.
     function addCustomSection() {
-        // Remove extra spaces before validation.
-        const trimmedSection = customSection.trim();
+        const trimmedSection =
+            customSection.trim();
 
         // Ignore empty input.
         if (!trimmedSection) return;
 
-        // Prevent duplicate section names.
-        if (availableSections.includes(trimmedSection)) return;
+        // Prevent duplicate normal section names.
+        const alreadyExists =
+            availableSections.some(
+                (section) =>
+                    !section.isBlank &&
+                    section.name === trimmedSection
+            );
 
-        // Add the new section to the available list.
+        if (alreadyExists) return;
+
+        const newSection = {
+            id: createId("section"),
+            name: trimmedSection,
+            isBlank: false,
+            isDefault: false,
+        };
+
         setAvailableSections([
             ...availableSections,
-            trimmedSection,
+            newSection,
         ]);
 
-        // Automatically select the new section if there is room.
-       if (selectedSections.length < 3) {
+        // Automatically select if there is room.
+        if (selectedSections.length < 4) {
             setSelectedSections([
                 ...selectedSections,
-                trimmedSection,
+                newSection.id,
             ]);
         }
 
-        // Clear the input field for the next entry.
         setCustomSection("");
+    }
+
+    // Add a blank section.
+    //
+    // The user does NOT type "-".
+    //
+    // Every click creates a completely separate section
+    // because every section gets a unique ID.
+    function addBlankSection() {
+        const newSection = {
+            id: createId("blank-section"),
+            name: "",
+            isBlank: true,
+            isDefault: false,
+        };
+
+        setAvailableSections([
+            ...availableSections,
+            newSection,
+        ]);
+
+        // Automatically select if there is room.
+        if (selectedSections.length < 4) {
+            setSelectedSections([
+                ...selectedSections,
+                newSection.id,
+            ]);
+        }
     }
 
     return (
         <main className="min-h-screen bg-gray-100 flex justify-center py-12">
+
             <div className="w-full max-w-3xl rounded-xl bg-white p-8 shadow">
 
                 <h1 className="text-3xl font-bold">
@@ -112,63 +216,67 @@ if (selectedSections.length >= 3) return;
                 </p>
 
                 <h2 className="text-xl font-semibold mt-8">
-                    Choose up to 3 Sections
+                    Choose up to 4 Sections
                 </h2>
 
-                {/* Prayer is always included in every planner. */}
-                <p className="text-green-600 mt-2">
-                    ✓ Prayer Routine (Always Included)
-                </p>
-
-                {/* Display every available section as a selectable row. */}
+                {/* Available sections */}
                 <div className="mt-8 space-y-3">
 
-                    {availableSections.map((section) => {
-                        // Check whether this is a built-in section.
-                        // Built-in sections cannot be deleted.
-                        const isDefault = defaultSections.includes(section);
+                    {availableSections.map((section) => (
 
-                        return (
-                            <div
-                                key={section}
-                                className="flex items-center justify-between border rounded-lg p-4"
-                            >
-                                <label className="flex items-center gap-3 cursor-pointer flex-1">
+                        <div
+                            key={section.id}
+                            className="flex items-center justify-between border rounded-lg p-4"
+                        >
 
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedSections.includes(section)}
-                                        onChange={() =>
-                                            toggleSection(section)
-                                        }
-                                    />
+                            <label className="flex items-center gap-3 cursor-pointer flex-1">
 
-                                    <span>{section}</span>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedSections.includes(
+                                        section.id
+                                    )}
+                                    onChange={() =>
+                                        toggleSection(section.id)
+                                    }
+                                />
 
-                                </label>
-
-                                {/* Show the delete button only for custom sections. */}
-                                {!isDefault && (
-                                    <button
-                                        type="button"
-                                        className="text-red-500 font-bold text-lg px-2"
-                                        onClick={() =>
-                                            removeSection(section)
-                                        }
-                                    >
-                                        ✕
-                                    </button>
+                                {section.isBlank ? (
+                                    <span className="text-gray-500">
+                                        Blank Section
+                                    </span>
+                                ) : (
+                                    <span>
+                                        {section.name}
+                                    </span>
                                 )}
-                            </div>
-                        );
-                    })}
+                            </label>
+
+                            {/* Built-in sections cannot be deleted. */}
+                            {!section.isDefault && (
+
+                                <button
+                                    type="button"
+                                    className="text-red-500 font-bold text-lg px-2"
+                                    onClick={() =>
+                                        removeSection(section.id)
+                                    }
+                                >
+                                    ✕
+                                </button>
+
+                            )}
+
+                        </div>
+
+                    ))}
 
                 </div>
 
-                {/* Input for creating a custom section. */}
-                <div className="flex flex-col gap-5 mt-5">
+                {/* Custom section input */}
+                <div className="mt-6">
 
-                    <label className="bg-gray-100 p-3 border-2 rounded-lg">
+                    <label className="block bg-gray-100 p-3 border-2 rounded-lg">
 
                         <input
                             type="text"
@@ -182,30 +290,44 @@ if (selectedSections.length >= 3) return;
 
                     </label>
 
-                    {/* Add the custom section to the list. */}
+                </div>
+
+                {/* Section buttons */}
+                <div className="flex gap-3 mt-4">
+
                     <Button
-                        className="p-5"
                         onClick={addCustomSection}
                         disabled={!customSection.trim()}
                     >
-                        + Add
+                        + Add Section
+                    </Button>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addBlankSection}
+                    >
+                        + Add Blank Section
                     </Button>
 
                 </div>
 
-                {/* Display how many sections are currently selected. */}
+                {/* Selected count */}
                 <p className="mt-6">
-                    Selected {selectedSections.length}  / 3
+                    Selected {selectedSections.length}/4
                 </p>
+
                 <Button
                     className="mt-8"
-                    disabled={selectedSections.length === 0}
-                    onClick={() => router.push("/planner/configure")}
+                    onClick={() =>
+                        router.push("/planner/configure")
+                    }
                 >
                     Continue
                 </Button>
 
             </div>
+
         </main>
     );
 }

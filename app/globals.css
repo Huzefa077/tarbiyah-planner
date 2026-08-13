@@ -121,10 +121,176 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
+  }
+}
+
+/* =========================================================
+   PLANNER PREVIEW
+   ---------------------------------------------------------
+   These are the "physical page" rules. They are NOT scoped
+   to @media print — they apply on screen too, so the on
+   -screen preview is sized in real mm exactly like the
+   printed page. Only cosmetic differences (shadow, rounded
+   corners, hiding UI controls) are print-only, further down.
+   ========================================================= */
+
+/*
+ * The sheet element represents the full physical paper.
+ * Padding stands in for the printed page margin, so the
+ * same 8mm inset is used everywhere instead of relying on
+ * @page's margin (which only affects print). This keeps a
+ * single source of truth for spacing on screen and on paper.
+ */
+.planner-sheet {
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 8mm;
+  background: white;
+  font-family: var(--font-fredoka), sans-serif;
+}
+
+.planner-a4 .planner-sheet {
+  width: 297mm;
+  min-height: 210mm;
+}
+
+.planner-a3 .planner-sheet {
+  width: 420mm;
+  min-height: 297mm;
+}
+
+.planner-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.planner-table-main {
+  table-layout: auto;
+  width: 100%;
+  height: 100%;
+}
+
+.planner-table-main th,
+.planner-table-main td {
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.planner-section-col {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.planner-activity-col {
+  /* width: 110px;
+  min-width: 90px;
+  max-width: 160px; */
+  width: 1%;
+  white-space: nowrap;
+}
+
+/*
+ * Day columns stay compact so the remaining
+ * horizontal space is available for the calendar days.
+ */
+.planner-day-col,
+.planner-day-cell {
+  width: 16px;
+  min-width: 16px;
+  max-width: 16px;
+}
+
+.planner-checkbox {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #000;
+  margin: 0 auto;
+}
+
+.planner-tracker-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.planner-table-main tbody tr.planner-habit-row {
+  height: var(--activity-row-height);
+}
+
+.planner-a4 .planner-tracker-wrapper {
+  height: 108mm;
+}
+
+.planner-a3 .planner-tracker-wrapper {
+  height: 195mm;
+}
+
+/* =========================================================
+   PRINT (cosmetic-only overrides)
+   ========================================================= */
+
+@media print {
+
+  body {
+    background: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .planner-preview-main {
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .planner-sheet {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .planner-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* =========================================================
+   PRINT PAGE SIZE
+   ========================================================= */
+
+@media print {
+
+  @page planner-a4 {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  @page planner-a3 {
+    size: A3 landscape;
+    margin: 0;
+  }
+
+  .planner-a4 {
+    page: planner-a4;
+  }
+
+  .planner-a3 {
+    page: planner-a3;
   }
 }

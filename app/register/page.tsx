@@ -1,86 +1,229 @@
-// Reusable styled form controls from the project's UI component folder.
+"use client";
+
+import { FormEvent, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// Next.js Link navigates to another route without a full page reload.
 import Link from "next/link";
 
-// This default export is the page Next.js renders for the /register URL.
 export default function RegisterPage() {
-  return (
-    // Full-height page that centres the white form card on a light-gray background.
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
+    // Store the values entered by the parent.
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-      {/* w-full helps the card fit small screens; max-w-md limits its width on large screens. */}
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
+    // Used to disable the button while the request is running.
+    const [isLoading, setIsLoading] = useState(false);
 
-        {/* The page heading and its supporting text. */}
-        <h1 className="text-3xl font-bold text-center">
-          Create Account
-        </h1>
+    // Stores an error message returned by the API.
+    const [error, setError] = useState("");
 
-        <p className="text-center text-gray-500 mt-2">
-          Start building your child&apos;s Tarbiyah Planner
-        </p>
+    // Stores the successful registration message.
+    const [success, setSuccess] = useState("");
 
-        {/* The form layout: space-y-5 adds vertical space between its direct children.
-            It only displays fields for now; it does not submit data yet. */}
-        <form className="mt-8 space-y-5">
+    async function handleSubmit(
+        event: FormEvent<HTMLFormElement>
+    ) {
+        event.preventDefault();
 
-          {/* The name field is a normal text input because it has no type prop. */}
-          <div>
-            <label className="font-medium">
-              Parent Name
-            </label>
+        // Clear messages from the previous request.
+        setError("");
+        setSuccess("");
 
-            <Input
-              placeholder="Enter your name"
-            />
-          </div>
+        setIsLoading(true);
 
-          {/* Email input: type=email lets the browser validate an email-shaped value. */}
-          <div>
-            <label className="font-medium">
-              Email
-            </label>
+        try {
+            /*
+            Send the form data to our backend.
 
-            <Input
-              type="email"
-              placeholder="Enter your email"
-            />
-          </div>
+            POST /api/auth/register
+            */
+            const response = await fetch(
+                "/api/auth/register",
+                {
+                    method: "POST",
 
-          {/* Password input: type=password hides the characters a user enters. */}
-          <div>
-            <label className="font-medium">
-              Password
-            </label>
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+                    },
 
-            <Input
-              type="password"
-              placeholder="Enter your password"
-            />
-          </div>
+                    body: JSON.stringify({
+                        fullName,
+                        email,
+                        password,
+                    }),
+                }
+            );
 
-          {/* w-full makes this reusable Button span the available card width. */}
-          <Button className="w-full">
-            Register
-          </Button>
+            // Convert the backend response into JavaScript.
+            const data = await response.json();
 
-        </form>
+            /*
+            The backend returns success: true/false.
 
-        {/* Text shown below the form. {" "} inserts one explicit space before the Link. */}
-        <p className="text-center text-sm mt-6">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="text-blue-600 hover:underline"
-          >
-            Login
-          </Link>
-        </p>
+            If the HTTP request itself failed, show the
+            message returned by the API.
+            */
+            if (!response.ok) {
+                setError(
+                    data.message ||
+                        "Registration failed."
+                );
 
-      </div>
+                return;
+            }
 
-    </main>
-  );
+            /*
+            Registration succeeded.
+
+            We don't need to store a token here because
+            registration currently only creates the account.
+
+            Login will create the authentication cookie.
+            */
+            setSuccess(
+                "Account created successfully. You can now log in."
+            );
+
+            // Clear the form after successful registration.
+            setFullName("");
+            setEmail("");
+            setPassword("");
+
+        } catch (error) {
+
+            /*
+            This catches errors such as a network failure
+            where the request could not reach the server.
+            */
+            console.error(
+                "Registration request failed:",
+                error
+            );
+
+            setError(
+                "Unable to connect to the server."
+            );
+
+        } finally {
+            // Re-enable the button.
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <main className="min-h-screen flex items-center justify-center bg-gray-100">
+
+            <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
+
+                <h1 className="text-3xl font-bold text-center">
+                    Create Account
+                </h1>
+
+                <p className="text-center text-gray-500 mt-2">
+                    Start building your child&apos;s Tarbiyah Planner
+                </p>
+
+                <form
+                    className="mt-8 space-y-5"
+                    onSubmit={handleSubmit}
+                >
+
+                    {/* Parent name */}
+                    <div>
+                        <label className="font-medium">
+                            Parent Name
+                        </label>
+
+                        <Input
+                            type="text"
+                            placeholder="Enter your name"
+                            value={fullName}
+                            onChange={(event) =>
+                                setFullName(
+                                    event.target.value
+                                )
+                            }
+                        />
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                        <label className="font-medium">
+                            Email
+                        </label>
+
+                        <Input
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(event) =>
+                                setEmail(
+                                    event.target.value
+                                )
+                            }
+                        />
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                        <label className="font-medium">
+                            Password
+                        </label>
+
+                        <Input
+                            type="password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChange={(event) =>
+                                setPassword(
+                                    event.target.value
+                                )
+                            }
+                        />
+                    </div>
+
+                    {/* Error message */}
+                    {error && (
+                        <p className="text-sm text-red-600">
+                            {error}
+                        </p>
+                    )}
+
+                    {/* Success message */}
+                    {success && (
+                        <p className="text-sm text-green-600">
+                            {success}
+                        </p>
+                    )}
+
+                    {/* Submit */}
+                    <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading
+                            ? "Creating Account..."
+                            : "Register"}
+                    </Button>
+
+                </form>
+
+                <p className="text-center text-sm mt-6">
+                    Already have an account?{" "}
+
+                    <Link
+                        href="/login"
+                        className="text-blue-600 hover:underline"
+                    >
+                        Login
+                    </Link>
+                </p>
+
+            </div>
+
+        </main>
+    );
 }

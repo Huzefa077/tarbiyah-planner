@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 // Import the reusable styled button from this project.
 import { Button } from "@/components/ui/button";
 // Import React's useState Hook, which lets a component remember changing data.
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { PlannerContext } from "@/context/PlannerContext";
 
 // app/planner/page.tsx is the page shown at the URL: /planner
 export default function PlannerPage() {
@@ -15,6 +16,18 @@ export default function PlannerPage() {
     // setAgeGroup = the function used to change ageGroup after the user clicks an option.
     const [ageGroup, setAgeGroup] = useState("");
     const router = useRouter();
+    const planner = useContext(PlannerContext);
+
+    if (!planner) {
+        throw new Error("PlannerContext not found");
+    }
+
+    const { resetPlanner } = planner;
+
+    // Reaching /planner always starts a fresh planner instead of editing the last one.
+    useEffect(() => {
+        resetPlanner();
+    }, [resetPlanner]);
 
     return (
         // Page layout:
