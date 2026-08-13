@@ -20,7 +20,7 @@ to the User.
 ==========================================================
 */
 
-@Entity()
+@Entity("User")
 export class User {
 
     // Unique ID for the user.

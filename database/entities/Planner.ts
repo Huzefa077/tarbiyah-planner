@@ -24,7 +24,7 @@ foreign key stored in the Planner table.
 ==========================================================
 */
 
-@Entity()
+@Entity("Planner")
 export class Planner {
 
     // Unique planner ID.

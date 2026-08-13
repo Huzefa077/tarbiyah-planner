@@ -31,7 +31,7 @@ through the foreign key stored in this table.
 ==========================================================
 */
 
-@Entity()
+@Entity("Section")
 export class Section {
 
     // Unique section ID.

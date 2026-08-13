@@ -30,7 +30,7 @@ The Section ID is stored through the relation below.
 ==========================================================
 */
 
-@Entity()
+@Entity("Activity")
 export class Activity {
 
     // Unique activity ID.
