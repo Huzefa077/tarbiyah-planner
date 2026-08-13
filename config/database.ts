@@ -1,6 +1,6 @@
 import "reflect-metadata";
+import "pg";
 import { DataSource } from "typeorm";
-
 import { User } from "@/database/entities/User";
 import { Planner } from "@/database/entities/Planner";
 import { Section } from "@/database/entities/Section";
