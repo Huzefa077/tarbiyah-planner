@@ -49,40 +49,48 @@ export async function POST(request: Request) {
     const database = await connectDatabase();
 
     // A transaction rolls everything back if one database step fails.
-    const planner = await database.transaction(async (manager) => {
-      const savedPlanner = await manager.save(
-        manager.create(Planner, { title: result.data.title, user })
-      );
+    const plannerId = await database.transaction(async (manager) => {
+      /*
+        insert() writes one database row. Unlike save(), it does not walk
+        through related objects and attempt its own dependency sorting.
+
+        This route already controls the correct order:
+        Planner → Section → Activity.
+      */
+      const plannerResult = await manager.insert(Planner, {
+        title: result.data.title,
+        user: { id: user.id },
+      });
+
+      const newPlannerId = Number(plannerResult.identifiers[0].id);
 
       for (const sectionData of result.data.sections) {
-        const savedSection = await manager.save(
-          manager.create(Section, {
-            name: sectionData.name,
-            isBlank: sectionData.isBlank,
-            isDefault: sectionData.isDefault,
-            planner: savedPlanner,
-          })
-        );
+        const sectionResult = await manager.insert(Section, {
+          name: sectionData.name,
+          isBlank: sectionData.isBlank,
+          isDefault: sectionData.isDefault,
+          planner: { id: newPlannerId },
+        });
+
+        const newSectionId = Number(sectionResult.identifiers[0].id);
 
         if (sectionData.activities.length > 0) {
-          await manager.save(
+          await manager.insert(
             Activity,
-            sectionData.activities.map((activity) =>
-              manager.create(Activity, {
-                name: activity.name,
-                isBlank: activity.isBlank,
-                section: savedSection,
-              })
-            )
+            sectionData.activities.map((activity) => ({
+              name: activity.name,
+              isBlank: activity.isBlank,
+              section: { id: newSectionId },
+            }))
           );
         }
       }
 
-      return savedPlanner;
+      return newPlannerId;
     });
 
     return NextResponse.json(
-      { success: true, message: "Planner saved.", plannerId: planner.id },
+      { success: true, message: "Planner saved.", plannerId },
       { status: 201 }
     );
   } catch (error) {

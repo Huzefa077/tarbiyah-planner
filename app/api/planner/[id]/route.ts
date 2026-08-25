@@ -80,20 +80,22 @@ export async function PUT(
         .execute();
 
       for (const sectionData of result.data.sections) {
-        const savedSection = await manager.save(manager.create(Section, {
+        const sectionResult = await manager.insert(Section, {
           name: sectionData.name,
           isBlank: sectionData.isBlank,
           isDefault: sectionData.isDefault,
-          planner: existingPlanner,
-        }));
+          planner: { id: plannerId },
+        });
+
+        const newSectionId = Number(sectionResult.identifiers[0].id);
 
         if (sectionData.activities.length > 0) {
-          await manager.save(
+          await manager.insert(
             Activity,
-            sectionData.activities.map((activity) => manager.create(Activity, {
+            sectionData.activities.map((activity) => ({
               name: activity.name,
               isBlank: activity.isBlank,
-              section: savedSection,
+              section: { id: newSectionId },
             }))
           );
         }
