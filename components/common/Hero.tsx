@@ -10,11 +10,11 @@ export default async function Hero() {
   return (
     <section className="flex min-h-[calc(100svh-57px)] w-full max-w-2xl flex-col items-center justify-center text-center">
       {/* The hero fills the space below the navbar; the workflow begins after scrolling. */}
-      <h1 className="text-5xl font-bold">
+      <h1 className="text-4xl font-bold sm:text-5xl">
         Tarbiyah Planner
       </h1>
 
-      <p className="mt-6 text-lg text-gray-600">
+      <p className="mt-6 text-base text-gray-600 sm:text-lg">
         Help your child build good habits, strong character, and confidence through simple daily routines.
       </p>
 
@@ -35,22 +35,25 @@ export default async function Hero() {
             </Link>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/register">
-              <Button>
-                Sign up
-              </Button>
-            </Link>
+          <div className="flex flex-col items-center gap-4">
+            {/* Account actions stay together because they are the main, permanent paths. */}
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/register">
+                <Button>
+                  Sign up
+                </Button>
+              </Link>
 
-            <Link href="/login">
-              <Button variant="outline">
-                Sign in
-              </Button>
-            </Link>
+              <Link href="/login">
+                <Button variant="outline">
+                  Sign in
+                </Button>
+              </Link>
+            </div>
 
             {/* Guests can build, preview, and print a planner without an account. */}
             <Link href="/planner">
-              <Button variant="outline">
+              <Button size="lg" variant="outline">
                 Try as Guest
               </Button>
             </Link>
