@@ -291,6 +291,7 @@ summary {
   font-family: var(--font-fredoka), sans-serif;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Printed-paper controls must remain black text on white paper in either app theme. */
@@ -301,12 +302,46 @@ summary {
 
 .planner-a4 .planner-sheet {
   width: 297mm;
-  min-height: 210mm;
+  height: 210mm;
 }
 
 .planner-a3 .planner-sheet {
-  width: 340mm;
-  min-height: 240mm;
+  width: 420mm;
+  height: 297mm;
+}
+
+/* A3 has more physical space, so its printed text can be comfortably larger than A4. */
+.planner-a3 .planner-sheet .text-\[8px\] {
+  font-size: 10px !important;
+}
+
+.planner-a3 .planner-sheet .text-\[9px\] {
+  font-size: 11px !important;
+}
+
+.planner-a3 .planner-sheet .text-\[10px\] {
+  font-size: 12px !important;
+}
+
+.planner-a3 .planner-sheet .text-\[13px\] {
+  font-size: 15px !important;
+}
+
+.planner-a3 .planner-sheet .text-\[14px\],
+.planner-a3 .planner-sheet .text-sm {
+  font-size: 16px !important;
+}
+
+.planner-a3 .planner-sheet .text-xs {
+  font-size: 14px !important;
+}
+
+.planner-a3 .planner-sheet .text-2xl {
+  font-size: 30px !important;
+}
+
+.planner-a3 .planner-sheet .text-\[30px\] {
+  font-size: 34px !important;
 }
 
 .planner-table {
@@ -347,23 +382,36 @@ summary {
 .planner-tracker-wrapper {
   display: flex;
   flex-direction: column;
+  flex: none;
+  overflow: hidden;
+  /* The table reaches the wrapper's fixed height, so this keeps its final edge visible. */
+  border-bottom: 1px solid #000;
 }
 
 .planner-table-main tbody tr.planner-habit-row {
   height: var(--activity-row-height);
 }
 
-/* The standalone daily-total row matches the height of an activity row. */
+.planner-daily-summary-wrapper {
+  flex: none;
+  height: 14mm;
+  overflow: hidden;
+}
+
+/* The standalone daily-total table stays compact, regardless of task count. */
 .planner-daily-summary .planner-summary-row {
-  height: var(--activity-row-height);
+  height: 100%;
 }
 
-.planner-a4 .planner-tracker-wrapper {
-  height: 108mm;
+.planner-header {
+  flex: 0 0 18mm;
+  height: 18mm;
+  overflow: hidden;
+  padding-bottom: 0 !important;
 }
 
-.planner-a3 .planner-tracker-wrapper {
-  height: 138mm;
+.planner-header-row {
+  height: 6mm;
 }
 
 /* The rewards table is the third separate table in the printed planner. */
@@ -372,13 +420,22 @@ summary {
   flex: none;
   /* Keep the three planner tables separate with a small, consistent gap. */
   margin-top: 8px;
-  /* 47mm gives the rewards and signature boxes comfortable handwriting room. */
-  height: 47mm;
-  min-height: 47mm;
+  /* The table and its inner reward/signature areas share this full fixed height. */
+  height: var(--planner-footer-height, 47mm);
+  min-height: var(--planner-footer-height, 47mm);
 }
 
 .planner-footer > table {
   height: 100%;
+}
+
+.planner-footer thead {
+  height: 6mm;
+}
+
+.planner-footer tbody,
+.planner-footer tbody tr {
+  height: calc(100% - 6mm);
 }
 
 /* =========================================================
@@ -409,19 +466,27 @@ summary {
     box-shadow: none !important;
     border-radius: 0 !important;
     margin: 0 !important;
-
+    overflow: hidden !important;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* The physical printout remains a genuine A3 landscape page. */
-  .planner-a3 .planner-sheet {
-    width: 420mm;
-    min-height: 297mm;
+  /* The on-screen dimensions and printed dimensions intentionally match. */
+  .planner-a4 .planner-sheet {
+    width: 297mm !important;
+    height: 210mm !important;
   }
 
-  .planner-a3 .planner-tracker-wrapper {
-    height: 195mm;
+  .planner-a3 .planner-sheet {
+    width: 420mm !important;
+    height: 297mm !important;
+  }
+
+  /* The planner itself has no rotated layout; keep it that way in print engines. */
+  .planner-sheet,
+  .planner-sheet * {
+    transform: none !important;
+    writing-mode: horizontal-tb !important;
   }
 
   .planner-footer {

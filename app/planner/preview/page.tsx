@@ -133,21 +133,14 @@ function DayCheckboxCells({
 }
 
 function DailyCompletedActivitiesTable({
-    activityRowHeight,
     dayCount,
     totalActivities,
 }: {
-    activityRowHeight: number;
     dayCount: number;
     totalActivities: number;
 }) {
     return (
-        <table
-            className="planner-table-main planner-daily-summary border-collapse border border-black text-center text-[10px]"
-            style={{
-                "--activity-row-height": `${activityRowHeight}mm`,
-            } as React.CSSProperties}
-        >
+        <table className="planner-table-main planner-daily-summary border-collapse border border-black text-center text-[10px]">
             <PlannerColumnGroup dayCount={dayCount} />
 
             <tbody>
@@ -384,18 +377,13 @@ export default function PreviewPage() {
      * More activities:
      * → shorter rows
      */
-    const trackerHeight =
-        paperSize === "A4"
-            ? 108
-            : 138;
-
-    const headerHeight = 8;
-
+    const activityCountForLayout = Math.max(totalActivities, 1);
+    const trackerHeaderHeight = 6;
+    // Use most of the remaining page height for the handwriting grid.
+    const trackerHeight = paperSize === "A4" ? 107 : 194;
+    const footerHeight = 49.5;
     const activityRowHeight =
-        totalActivities > 0
-            ? (trackerHeight - headerHeight) /
-            totalActivities
-            : trackerHeight - headerHeight;
+        (trackerHeight - trackerHeaderHeight) / activityCountForLayout;
 
     async function handleSave() {
         setSaveError("");
@@ -471,7 +459,7 @@ export default function PreviewPage() {
             <div className={`no-print mx-auto mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${
                 paperSize === "A4"
                     ? "max-w-[297mm]"
-                    : "max-w-[340mm]"
+                    : "max-w-[420mm]"
             }`}>
 
                 {/* Print setup stays above the left edge of the planner sheet. */}
@@ -615,8 +603,7 @@ export default function PreviewPage() {
                     HEADER
                 ========================== */}
 
-                {/* Extra bottom space makes the header feel balanced with the expanded footer. */}
-                <div className="planner-header flex items-start justify-between gap-4 pb-5">
+                <div className="planner-header flex items-start justify-between gap-4">
 
                     <div className="shrink-0 text-sm">
 
@@ -703,7 +690,10 @@ export default function PreviewPage() {
                     MAIN HABIT TRACKER
                 ========================== */}
 
-                <div className="planner-tracker-wrapper mt-4">
+                <div
+                    className="planner-tracker-wrapper mt-1"
+                    style={{ height: `${trackerHeight}mm` }}
+                >
 
                     <table
                         className="planner-table-main border-collapse border border-black text-center text-[10px]"
@@ -809,7 +799,6 @@ export default function PreviewPage() {
                 {/* A separate one-row table keeps the daily total easy to read and write in. */}
                 <div className="planner-daily-summary-wrapper mt-2">
                     <DailyCompletedActivitiesTable
-                        activityRowHeight={activityRowHeight}
                         dayCount={dayCount}
                         totalActivities={totalActivities}
                     />
@@ -819,7 +808,14 @@ export default function PreviewPage() {
                     FOOTER
                 ========================== */}
 
-                <div className="planner-footer mt-2">
+                <div
+                    className="planner-footer mt-2"
+                    style={
+                        {
+                            "--planner-footer-height": `${footerHeight}mm`,
+                        } as React.CSSProperties
+                    }
+                >
 
                     <table className="planner-table border-collapse border border-black text-center text-[14px]">
 
@@ -870,8 +866,7 @@ export default function PreviewPage() {
                                 <td className="border border-black align-top p-2">
                                 </td>
 
-                                {/* This taller cell stretches all footer content, including stars and signatures. */}
-                                <td className="border border-black p-0 align-middle h-33">
+                                <td className="border border-black p-0 align-middle">
                                     <DailyStarsGrid
                                         dayCount={
                                             dayCount
@@ -910,11 +905,6 @@ export default function PreviewPage() {
                     </table>
 
                 </div>
-
-                <p className="mt-4 text-center text-[10px] text-gray-500">
-                    I am trying my best for Allah
-                </p>
-
             </div>
 
         </main>
