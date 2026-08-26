@@ -12,7 +12,7 @@ export default async function Navbar() {
 
   // sticky keeps this header in normal page layout, then pins it at the viewport top while scrolling.
   return (
-    <header className="no-print sticky top-0 z-50 border-b bg-white">
+    <header className="site-navbar no-print sticky top-0 z-50 border-b bg-white">
       <MobileNavbarMenu isSignedIn={Boolean(user)} />
 
       <nav className="mx-auto hidden w-full max-w-360 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 px-5 py-3 sm:grid sm:grid-cols-[1fr_auto_1fr]">

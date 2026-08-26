@@ -19,10 +19,10 @@ export default async function Hero() {
             Calm routines, one day at a time
           </p>
           <h1 className="mt-2 text-3xl leading-[1.15] font-bold tracking-tight sm:mt-4 sm:text-5xl sm:leading-tight lg:text-6xl">
-            Make meaningful days easier to plan.
+            Build good habits with simple daily routines.
           </h1>
           <p className="mx-auto mt-4 max-w-lg px-1 text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:max-w-none sm:px-0 sm:text-lg sm:leading-7 lg:mx-0">
-            Create a simple printable routine your child can follow with stars, stickers, ticks, and small rewards — making everyday habits more visible and enjoyable.
+            Create a printable routine with simple daily activities, stars, and weekly rewards your child will look forward to.
           </p>
 
           <div className="mt-6 flex flex-col items-stretch gap-3 sm:mt-8 sm:flex-row sm:justify-center lg:justify-start">
@@ -41,8 +41,11 @@ export default async function Hero() {
             </p>
           ) : (
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground sm:mt-4 sm:text-sm">
-              Create it online, print it at home, then make progress visible together.
-              <Link className="ml-1 font-medium text-primary hover:underline" href="/planner">
+              Not ready to sign up?
+              <Link
+                className="ml-2 inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1 font-semibold text-primary shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:shadow-primary/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transform-none"
+                href="/planner"
+              >
                 Try as a guest
               </Link>
             </p>

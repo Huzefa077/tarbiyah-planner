@@ -150,8 +150,8 @@
   color: var(--foreground);
 }
 
-/* This overrides the muted link colour only while the visitor hovers it. */
-.dark .text-gray-600:hover {
+/* Only navbar links brighten on hover; page paragraphs keep their muted colour. */
+.dark .site-navbar .text-gray-600:hover {
   color: var(--foreground);
 }
 
