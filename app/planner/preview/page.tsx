@@ -61,10 +61,26 @@ function DayColumns({
                     <col
                         key={day}
                         className="planner-day-col"
+                        style={{ width: `${79 / dayCount}%` }}
                     />
                 )
             )}
         </>
+    );
+}
+
+/* Both planner tables use these columns so their day borders always align. */
+function PlannerColumnGroup({
+    dayCount,
+}: {
+    dayCount: number;
+}) {
+    return (
+        <colgroup>
+            <col style={{ width: "9%" }} />
+            <col style={{ width: "12%" }} />
+            <DayColumns dayCount={dayCount} />
+        </colgroup>
     );
 }
 
@@ -92,8 +108,10 @@ function DayHeaderCells({
 
 function DayCheckboxCells({
     dayCount,
+    showInnerCheckboxes,
 }: {
     dayCount: number;
+    showInnerCheckboxes: boolean;
 }) {
     return (
         <>
@@ -104,11 +122,55 @@ function DayCheckboxCells({
                         key={day}
                         className="planner-day-cell border border-black p-0 align-middle"
                     >
-                        <div className="planner-checkbox" />
+                        {showInnerCheckboxes && (
+                            <div className="planner-checkbox" />
+                        )}
                     </td>
                 )
             )}
         </>
+    );
+}
+
+function DailyCompletedActivitiesTable({
+    activityRowHeight,
+    dayCount,
+    totalActivities,
+}: {
+    activityRowHeight: number;
+    dayCount: number;
+    totalActivities: number;
+}) {
+    return (
+        <table
+            className="planner-table-main planner-daily-summary border-collapse border border-black text-center text-[10px]"
+            style={{
+                "--activity-row-height": `${activityRowHeight}mm`,
+            } as React.CSSProperties}
+        >
+            <PlannerColumnGroup dayCount={dayCount} />
+
+            <tbody>
+                <tr className="planner-summary-row">
+                    <td
+                        colSpan={2}
+                        className="border border-black px-2 text-center text-[13px] font-bold align-middle whitespace-nowrap"
+                    >
+                        Total completed activities{" "}
+                        <span className="text-[9px] font-normal text-gray-500">
+                            (out of {totalActivities})
+                        </span>
+                    </td>
+
+                    {Array.from({ length: dayCount }, (_, day) => (
+                        <td
+                            className="planner-day-cell border border-black p-0 align-middle"
+                            key={day}
+                        />
+                    ))}
+                </tr>
+            </tbody>
+        </table>
     );
 }
 
@@ -239,6 +301,8 @@ export default function PreviewPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState("");
     const [saveSuccess, setSaveSuccess] = useState("");
+    // This affects the shared preview markup, so the browser prints the same version the user sees.
+    const [showActivityCheckboxes, setShowActivityCheckboxes] = useState(true);
 
     // When a success message exists, the controls use the second grid row below it.
     const controlsRow = saveSuccess
@@ -445,6 +509,18 @@ export default function PreviewPage() {
                         </option>
                     </select>
 
+                    <label className="flex h-8 items-center gap-2 rounded border border-gray-400 bg-secondary px-3 text-sm text-secondary-foreground dark:border-gray-600">
+                        <input
+                            checked={showActivityCheckboxes}
+                            className="size-3.5"
+                            onChange={(event) =>
+                                setShowActivityCheckboxes(event.target.checked)
+                            }
+                            type="checkbox"
+                        />
+                        Checkboxes
+                    </label>
+
                     <Button
                         className="border-gray-400 px-5 dark:border-gray-600"
                         onClick={() =>
@@ -637,19 +713,7 @@ export default function PreviewPage() {
                         } as React.CSSProperties}
                     >
 
-                        <colgroup>
-
-                            <col className="planner-section-col" />
-
-                            <col className="planner-activity-col" />
-
-                            <DayColumns
-                                dayCount={
-                                    dayCount
-                                }
-                            />
-
-                        </colgroup>
+                        <PlannerColumnGroup dayCount={dayCount} />
 
                         <thead>
 
@@ -725,6 +789,9 @@ export default function PreviewPage() {
 
                                                 <DayCheckboxCells
                                                     dayCount={dayCount}
+                                                    showInnerCheckboxes={
+                                                        showActivityCheckboxes
+                                                    }
                                                 />
 
                                             </tr>
@@ -739,11 +806,20 @@ export default function PreviewPage() {
 
                 </div>
 
+                {/* A separate one-row table keeps the daily total easy to read and write in. */}
+                <div className="planner-daily-summary-wrapper mt-2">
+                    <DailyCompletedActivitiesTable
+                        activityRowHeight={activityRowHeight}
+                        dayCount={dayCount}
+                        totalActivities={totalActivities}
+                    />
+                </div>
+
                 {/* =========================
                     FOOTER
                 ========================== */}
 
-                <div className="planner-footer mt-6">
+                <div className="planner-footer mt-2">
 
                     <table className="planner-table border-collapse border border-black text-center text-[14px]">
 

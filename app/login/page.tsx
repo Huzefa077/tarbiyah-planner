@@ -4,7 +4,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,6 +157,14 @@ export default function LoginPage() {
         <main className="min-h-screen flex items-center justify-center bg-gray-100">
 
             <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
+
+                <Link
+                    className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    href="/"
+                >
+                    <ArrowLeft aria-hidden="true" className="size-4" />
+                    Back to home
+                </Link>
 
                 <h1 className="text-3xl font-bold text-center">
                     Sign in

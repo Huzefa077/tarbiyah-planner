@@ -1,6 +1,7 @@
 /* ROOT LAYOUT — wraps every URL with the shared fonts, navigation, and planner state. */
 import { PlannerProvider } from "@/context/PlannerContext";
 import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
 import { PageLoaderProvider } from "@/components/common/PageLoader";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fredoka } from "next/font/google";
@@ -47,6 +48,9 @@ export default function RootLayout({
           <PlannerProvider>
             {children}
           </PlannerProvider>
+
+          {/* A small site-wide footer; no-print keeps it out of paper planners. */}
+          <Footer />
         </PageLoaderProvider>
 
       </body>

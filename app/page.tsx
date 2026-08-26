@@ -7,10 +7,8 @@ import Features from "@/components/common/Features";
 export default function Home() {
   return (
     // This is the page's main content area.
-    // min-h-screen fills at least the full browser height.
-    // flex flex-col stacks Hero and Features vertically.
-    // items-center centers both sections horizontally; px-6 adds side space.
-    <main className="min-h-screen flex flex-col items-center px-6">
+    // Hero and Features are stacked; each section controls its own responsive width and spacing.
+    <main className="min-h-screen">
       {/* The introductory title, description, and action links. */}
       <Hero />
 

@@ -54,7 +54,7 @@ export default async function DashboardPage() {
         return (
           <li
             key={planner.id}
-            className="relative rounded-lg border border-gray-200 p-4"
+            className="content-card-border relative rounded-lg border border-gray-200 p-4"
           >
             <p className="pr-16 font-semibold">{planner.title}</p>
             <DeletePlannerButton

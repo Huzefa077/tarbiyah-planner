@@ -159,6 +159,96 @@
   border-color: var(--border);
 }
 
+/* Stronger borders for dashboard and Updates cards in both colour modes. */
+.content-card-border {
+  border-color: oklch(0.8 0 0);
+}
+
+.dark .content-card-border {
+  border-color: oklch(0.4 0 0);
+}
+
+/* A slightly darker background used only by the active navbar link. */
+.nav-active {
+  background-color: oklch(0.92 0 0);
+}
+
+.dark .nav-active {
+  background-color: oklch(0.24 0 0);
+}
+
+/* Homepage sections fade upward once Reveal observes them in the viewport. */
+.reveal-section {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
+}
+
+.reveal-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* The hero stars are decorative reminders of physical sticker-based progress. */
+.physical-star {
+  filter: drop-shadow(0 3px 5px rgb(180 83 9 / 25%));
+}
+
+.physical-star-float {
+  animation: star-float 2.4s ease-in-out infinite;
+}
+
+.physical-star-glow {
+  animation: star-glow 2.5s ease-in-out infinite;
+}
+
+.physical-star-stuck {
+  transform: rotate(12deg);
+}
+
+@keyframes star-float {
+  50% {
+    transform: translate(-10px, -20px) rotate(-18deg);
+  }
+}
+
+@keyframes star-glow {
+  50% {
+    filter: drop-shadow(0 3px 9px rgb(245 158 11 / 50%));
+    transform: translate(10px, 14px) rotate(14deg) scale(1.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-section {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .physical-star-float,
+  .physical-star-glow {
+    animation: none;
+  }
+}
+
+/* Show a pointer only for controls that perform an action when clicked. */
+a[href],
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="file"]:not(:disabled),
+label,
+select:not(:disabled),
+summary {
+  cursor: pointer;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -170,6 +260,7 @@
 
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
 }
 
@@ -224,7 +315,7 @@
 }
 
 .planner-table-main {
-  table-layout: auto;
+  table-layout: fixed;
   width: 100%;
   height: 100%;
 }
@@ -235,28 +326,15 @@
   overflow-wrap: anywhere;
 }
 
-.planner-section-col {
-  width: 1%;
-  white-space: nowrap;
-}
-
+.planner-section-col,
 .planner-activity-col {
-  /* width: 110px;
-  min-width: 90px;
-  max-width: 160px; */
-  width: 1%;
   white-space: nowrap;
 }
 
-/*
- * Day columns stay compact so the remaining
- * horizontal space is available for the calendar days.
- */
+/* Each day receives its width from the shared column group in the component. */
 .planner-day-col,
 .planner-day-cell {
-  width: 16px;
   min-width: 16px;
-  max-width: 16px;
 }
 
 .planner-checkbox {
@@ -275,6 +353,11 @@
   height: var(--activity-row-height);
 }
 
+/* The standalone daily-total row matches the height of an activity row. */
+.planner-daily-summary .planner-summary-row {
+  height: var(--activity-row-height);
+}
+
 .planner-a4 .planner-tracker-wrapper {
   height: 108mm;
 }
@@ -283,11 +366,12 @@
   height: 138mm;
 }
 
-/* Auto margin takes spare height above the footer, anchoring it at the page bottom. */
+/* The rewards table is the third separate table in the printed planner. */
 .planner-footer {
   display: flex;
   flex: none;
-  margin-top: auto;
+  /* Keep the three planner tables separate with a small, consistent gap. */
+  margin-top: 8px;
   /* 47mm gives the rewards and signature boxes comfortable handwriting room. */
   height: 47mm;
   min-height: 47mm;

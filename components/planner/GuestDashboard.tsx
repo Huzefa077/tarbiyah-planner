@@ -54,7 +54,7 @@ export function GuestDashboard() {
       }
     >
       {guestPlanners.map((guestPlanner) => (
-        <li className="relative rounded-lg border border-gray-200 p-4" key={guestPlanner.id}>
+        <li className="content-card-border relative rounded-lg border border-gray-200 p-4" key={guestPlanner.id}>
           <p className="pr-16 font-semibold">{guestPlanner.title}</p>
           <Button
             className="absolute right-4 top-4 border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"

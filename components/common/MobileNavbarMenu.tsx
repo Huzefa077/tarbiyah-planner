@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/common/ThemeToggle";
+import { NavigationLinks } from "@/components/common/NavigationLinks";
 
 // This compact navigation replaces the desktop row on small screens.
 export default function MobileNavbarMenu({
@@ -21,7 +22,7 @@ export default function MobileNavbarMenu({
   return (
     <nav className="relative flex items-center justify-between px-4 py-3 sm:hidden">
       <Link
-        className="font-fredoka text-xl font-semibold text-primary"
+        className="font-fredoka text-xl font-semibold text-primary transition-transform duration-200 hover:scale-[1.03] motion-reduce:transform-none"
         href="/"
         onClick={closeMenu}
       >
@@ -45,15 +46,7 @@ export default function MobileNavbarMenu({
       {isOpen && (
         <div className="absolute left-0 top-full z-50 w-full border-b border-border bg-card px-4 py-4 shadow-lg">
           <div className="flex flex-col gap-1">
-            <Link className="rounded-md px-3 py-2 text-base font-medium hover:bg-muted" href="/dashboard" onClick={closeMenu}>
-              Dashboard
-            </Link>
-            <Link className="rounded-md px-3 py-2 text-base font-medium hover:bg-muted" href="/about" onClick={closeMenu}>
-              About
-            </Link>
-            <Link className="rounded-md px-3 py-2 text-base font-medium hover:bg-muted" href="/feedback" onClick={closeMenu}>
-              Feedback
-            </Link>
+            <NavigationLinks mobile onNavigate={closeMenu} />
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
@@ -65,7 +58,7 @@ export default function MobileNavbarMenu({
               </form>
             ) : (
               <div className="flex items-center gap-3">
-                <Link className="text-base font-medium text-gray-600 hover:text-foreground" href="/login" onClick={closeMenu}>
+                <Link className="rounded-md px-2 py-1 text-base font-medium text-gray-600 transition duration-200 hover:scale-[1.03] hover:bg-muted hover:text-foreground motion-reduce:transform-none" href="/login" onClick={closeMenu}>
                   Sign in
                 </Link>
                 <Button render={<Link href="/register" onClick={closeMenu} />} nativeButton={false}>

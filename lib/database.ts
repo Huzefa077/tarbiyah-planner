@@ -31,9 +31,28 @@ export async function connectDatabase() {
 
     config/database.ts
     */
-    await database.initialize();
+    const connectionStartedAt = Date.now();
 
-    console.log("Database connected successfully.");
+    try {
+        await database.initialize();
 
-    return database;
+        // This appears in Vercel Runtime Logs and tells us whether a cold database
+        // connection is responsible for a slow first request.
+        console.log(JSON.stringify({
+            level: "info",
+            message: "Database connection ready",
+            duration_ms: Date.now() - connectionStartedAt,
+        }));
+
+        return database;
+    } catch (error) {
+        console.error(JSON.stringify({
+            level: "error",
+            message: "Database connection failed",
+            duration_ms: Date.now() - connectionStartedAt,
+            error: error instanceof Error ? error.message : String(error),
+        }));
+
+        throw error;
+    }
 }

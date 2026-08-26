@@ -6,7 +6,7 @@ import { FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import GoogleIcon from "@/components/common/GoogleIcon";
 import { usePageLoader } from "@/components/common/PageLoader";
 
@@ -126,6 +126,14 @@ export default function RegisterPage() {
         <main className="min-h-screen flex items-center justify-center bg-gray-100">
 
             <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
+
+                <Link
+                    className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    href="/"
+                >
+                    <ArrowLeft aria-hidden="true" className="size-4" />
+                    Back to home
+                </Link>
 
                 <h1 className="text-3xl font-bold text-center">
                     Create Account
