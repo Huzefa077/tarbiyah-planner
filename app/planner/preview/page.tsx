@@ -25,6 +25,10 @@ const MONTH_NAMES = [
     "December",
 ];
 
+// Keep activity names readable without taking too much room from the 31 day columns.
+const ACTIVITY_COLUMN_MIN_WIDTH = 25;
+const ACTIVITY_COLUMN_MAX_WIDTH = 50;
+
 function getDaysInMonth(monthIndex: number) {
     return new Date(
         2024,
@@ -61,7 +65,6 @@ function DayColumns({
                     <col
                         key={day}
                         className="planner-day-col"
-                        style={{ width: `${79 / dayCount}%` }}
                     />
                 )
             )}
@@ -72,13 +75,21 @@ function DayColumns({
 /* Both planner tables use these columns so their day borders always align. */
 function PlannerColumnGroup({
     dayCount,
+    paperSize,
 }: {
     dayCount: number;
+    paperSize: "A4" | "A3";
 }) {
+    const preferredActivityWidth = paperSize === "A4" ? 38 : 40;
+    const activityColumnWidth = Math.min(
+        ACTIVITY_COLUMN_MAX_WIDTH,
+        Math.max(ACTIVITY_COLUMN_MIN_WIDTH, preferredActivityWidth)
+    );
+
     return (
         <colgroup>
             <col style={{ width: "9%" }} />
-            <col style={{ width: "12%" }} />
+            <col style={{ width: `${activityColumnWidth}mm` }} />
             <DayColumns dayCount={dayCount} />
         </colgroup>
     );
@@ -135,13 +146,15 @@ function DayCheckboxCells({
 function DailyCompletedActivitiesTable({
     dayCount,
     totalActivities,
+    paperSize,
 }: {
     dayCount: number;
     totalActivities: number;
+    paperSize: "A4" | "A3";
 }) {
     return (
         <table className="planner-table-main planner-daily-summary border-collapse border border-black text-center text-[10px]">
-            <PlannerColumnGroup dayCount={dayCount} />
+            <PlannerColumnGroup dayCount={dayCount} paperSize={paperSize} />
 
             <tbody>
                 <tr className="planner-summary-row">
@@ -703,7 +716,10 @@ export default function PreviewPage() {
                         } as React.CSSProperties}
                     >
 
-                        <PlannerColumnGroup dayCount={dayCount} />
+                        <PlannerColumnGroup
+                            dayCount={dayCount}
+                            paperSize={paperSize}
+                        />
 
                         <thead>
 
@@ -767,7 +783,7 @@ export default function PreviewPage() {
                                                     </td>
                                                 )}
 
-                                                <td className="border border-black p-1 text-[14px] text-center align-middle whitespace-nowrap">
+                                                <td className="border border-black p-1 text-[14px] text-center align-middle leading-tight">
                                                     {activity.isBlank ? (
                                                         <BlankLine
                                                             minWidth="7rem"
@@ -801,6 +817,7 @@ export default function PreviewPage() {
                     <DailyCompletedActivitiesTable
                         dayCount={dayCount}
                         totalActivities={totalActivities}
+                        paperSize={paperSize}
                     />
                 </div>
 
