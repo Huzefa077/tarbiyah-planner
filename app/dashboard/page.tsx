@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { DashboardPlannerActions } from "@/components/planner/DashboardPlannerActions";
 import { DeletePlannerButton } from "@/components/planner/DeletePlannerButton";
+import { GuestDashboard } from "@/components/planner/GuestDashboard";
 import { Planner } from "@/database/entities/Planner";
 import { getCurrentUser } from "@/lib/auth";
 import { connectDatabase } from "@/lib/database";
@@ -13,9 +13,9 @@ import { connectDatabase } from "@/lib/database";
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
-  // A visitor without a valid login cookie cannot view the dashboard.
+  // Guests see their sessionStorage planners in a browser-side dashboard instead of PostgreSQL data.
   if (!user) {
-    redirect("/login");
+    return <GuestDashboard />;
   }
 
   // Keep the saved full name, but make the greeting short and personal.

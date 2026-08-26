@@ -11,36 +11,32 @@ export default async function Navbar() {
   // sticky keeps this header in normal page layout, then pins it at the viewport top while scrolling.
   return (
     <header className="no-print sticky top-0 z-50 border-b bg-white">
-      <nav className="mx-auto grid w-full max-w-[1440px] grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-0.5 sm:grid-cols-[1fr_auto_1fr]">
+      <nav className="mx-auto grid w-full max-w-[1440px] grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 px-5 py-3 sm:grid-cols-[1fr_auto_1fr]">
         {/* The app name always leads back to the landing page. */}
-        <Link href="/" className="justify-self-start font-fredoka text-xl font-semibold text-primary">
+        <Link href="/" className="justify-self-start font-fredoka text-2xl font-semibold text-primary">
           Tarbiyah Planner
         </Link>
 
         {/* The middle grid column stays centred even when left and right content have different widths. */}
         <div className="col-span-2 row-start-2 flex items-center justify-center gap-4 sm:col-span-1 sm:col-start-2 sm:row-start-1">
-          {user ? (
-            <>
-              {/* Dashboard is the primary destination once a user is signed in. */}
-              <Link
-                href="/dashboard"
-                className="text-base font-medium text-gray-600 hover:text-foreground"
-              >
-                Dashboard
-              </Link>
-            </>
-          ) : null}
+          {/* Dashboard works for both signed-in users and temporary guest planners. */}
+          <Link
+            href="/dashboard"
+            className="text-lg font-medium text-gray-600 hover:text-foreground"
+          >
+            Dashboard
+          </Link>
 
           <Link
             href="/about"
-            className="text-base font-medium text-gray-600 hover:text-foreground"
+            className="text-lg font-medium text-gray-600 hover:text-foreground"
           >
             About
           </Link>
 
           <Link
             href="/feedback"
-            className="text-base font-medium text-gray-600 hover:text-foreground"
+            className="text-lg font-medium text-gray-600 hover:text-foreground"
           >
             Feedback
           </Link>
@@ -53,7 +49,7 @@ export default async function Navbar() {
 
           {user && (
             <form action="/api/auth/logout" method="POST">
-              <Button className="text-sm" size="sm" type="submit" variant="outline">
+              <Button className="text-base" type="submit" variant="outline">
                 Log out
               </Button>
             </form>
@@ -63,13 +59,13 @@ export default async function Navbar() {
             <>
               <Link
                 href="/login"
-                className="text-base font-medium text-gray-600 hover:text-foreground"
+                className="text-lg font-medium text-gray-600 hover:text-foreground"
               >
                 Sign in
               </Link>
 
               <Button
-                size="sm"
+                className="text-base"
                 render={<Link href="/register" />}
                 nativeButton={false}
               >

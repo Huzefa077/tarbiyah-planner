@@ -259,6 +259,7 @@ export default function PreviewPage() {
         plannerTitle,
         setEditingPlannerId,
         setPlannerTitle,
+        saveGuestPlanner,
     } = planner;
 
     const dayCount = useMemo(
@@ -368,9 +369,9 @@ export default function PreviewPage() {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    setSaveError(
-                        "Guest planners are not saved. Log in or register to save this planner."
-                    );
+                    // Guests receive a browser-session save instead of a PostgreSQL save.
+                    saveGuestPlanner();
+                    setSaveSuccess("temporary");
                     return;
                 }
 
@@ -459,17 +460,28 @@ export default function PreviewPage() {
                     {saveSuccess && (
                         <div
                             role="status"
-                            className="w-56 rounded-lg border border-green-600/30 bg-green-600/10 px-2 py-1.5 text-[11px] leading-4 text-green-800 dark:text-green-300 sm:col-start-1 sm:row-start-1"
+                            className="w-56 rounded-lg border border-green-600/30 bg-green-600/10 px-2 py-1.5 text-xs leading-5 text-green-800 dark:text-green-300 sm:col-start-1 sm:row-start-1"
                         >
-                            <p className="whitespace-nowrap">
-                                View your {saveSuccess} plan on{" "}
-                                <Link
-                                    href="/dashboard"
-                                    className="font-semibold underline underline-offset-4"
-                                >
-                                    Dashboard
-                                </Link>.
-                            </p>
+                            {saveSuccess === "temporary" ? (
+                                <p>
+                                    <Link
+                                        href="/dashboard"
+                                        className="font-semibold underline underline-offset-4"
+                                    >
+                                        View on Dashboard
+                                    </Link>
+                                </p>
+                            ) : (
+                                <p>
+                                    View your {saveSuccess} plan on{" "}
+                                    <Link
+                                        href="/dashboard"
+                                        className="font-semibold underline underline-offset-4"
+                                    >
+                                        Dashboard
+                                    </Link>.
+                                </p>
+                            )}
                         </div>
                     )}
 

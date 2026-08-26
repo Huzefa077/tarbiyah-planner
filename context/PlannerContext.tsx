@@ -12,6 +12,7 @@ import {
 
 // sessionStorage belongs to one browser tab and is never sent to PostgreSQL.
 const DRAFT_STORAGE_KEY = "tarbiyah-planner-draft";
+const GUEST_PLANNERS_STORAGE_KEY = "tarbiyah-planner-guest-planners";
 
 /*
 Shared Planner State
@@ -34,6 +35,16 @@ export interface PlannerActivity {
     id: string;
     name: string;
     isBlank: boolean;
+}
+
+// A guest planner has the same planning data, but its ID exists only in this browser session.
+export interface GuestPlanner {
+    id: string;
+    title: string;
+    availableSections: PlannerSection[];
+    selectedSections: string[];
+    activities: Record<string, PlannerActivity[]>;
+    createdAt: string;
 }
 
 interface PlannerContextType {
@@ -71,6 +82,12 @@ interface PlannerContextType {
 
     // Clears old planner data before starting a completely new planner.
     resetPlanner: () => void;
+
+    // Guest planners are kept in sessionStorage instead of the PostgreSQL database.
+    guestPlanners: GuestPlanner[];
+    saveGuestPlanner: () => void;
+    loadGuestPlanner: (guestPlanner: GuestPlanner) => void;
+    deleteGuestPlanner: (guestPlannerId: string) => void;
 }
 
 // Create Context.
@@ -102,6 +119,9 @@ export function PlannerProvider({
 
     const [plannerTitle, setPlannerTitle] = useState("");
 
+    const [guestPlanners, setGuestPlanners] = useState<GuestPlanner[]>([]);
+    const [editingGuestPlannerId, setEditingGuestPlannerId] = useState<string | null>(null);
+
     /*
     React state disappears on a page refresh. sessionStorage lets an unfinished
     planner survive that refresh without becoming a saved database planner.
@@ -128,6 +148,13 @@ export function PlannerProvider({
                 setActivities(draft.activities || {});
                 setEditingPlannerId(draft.editingPlannerId ?? null);
                 setPlannerTitle(draft.plannerTitle || "");
+                setEditingGuestPlannerId(draft.editingGuestPlannerId ?? null);
+            }
+
+            const savedGuestPlanners = sessionStorage.getItem(GUEST_PLANNERS_STORAGE_KEY);
+
+            if (savedGuestPlanners) {
+                setGuestPlanners(JSON.parse(savedGuestPlanners));
             }
         } catch {
             // A broken old draft is ignored; the parent can start a fresh one.
@@ -147,6 +174,7 @@ export function PlannerProvider({
             selectedSections,
             activities,
             editingPlannerId,
+            editingGuestPlannerId,
             plannerTitle,
         };
 
@@ -154,13 +182,20 @@ export function PlannerProvider({
             DRAFT_STORAGE_KEY,
             JSON.stringify(draft)
         );
+
+        sessionStorage.setItem(
+            GUEST_PLANNERS_STORAGE_KEY,
+            JSON.stringify(guestPlanners)
+        );
     }, [
         isDraftLoaded,
         availableSections,
         selectedSections,
         activities,
         editingPlannerId,
+        editingGuestPlannerId,
         plannerTitle,
+        guestPlanners,
     ]);
 
     const resetPlanner = useCallback(() => {
@@ -168,8 +203,70 @@ export function PlannerProvider({
         setSelectedSections([]);
         setActivities({});
         setEditingPlannerId(null);
+        setEditingGuestPlannerId(null);
         setPlannerTitle("");
     }, []);
+
+    // Save a snapshot of the current planner in this tab only, without calling the server.
+    const saveGuestPlanner = useCallback(() => {
+        const existingPlanner = guestPlanners.find(
+            (guestPlanner) => guestPlanner.id === editingGuestPlannerId
+        );
+
+        const guestPlanner: GuestPlanner = {
+            id: existingPlanner?.id ?? crypto.randomUUID(),
+            title: plannerTitle.trim() || "Untitled planner",
+            availableSections,
+            selectedSections,
+            activities,
+            createdAt: existingPlanner?.createdAt ?? new Date().toISOString(),
+        };
+
+        setGuestPlanners((previousGuestPlanners) => {
+            const alreadyExists = previousGuestPlanners.some(
+                (savedPlanner) => savedPlanner.id === guestPlanner.id
+            );
+
+            if (!alreadyExists) {
+                return [guestPlanner, ...previousGuestPlanners];
+            }
+
+            return previousGuestPlanners.map((savedPlanner) =>
+                savedPlanner.id === guestPlanner.id ? guestPlanner : savedPlanner
+            );
+        });
+
+        setEditingGuestPlannerId(guestPlanner.id);
+    }, [
+        activities,
+        availableSections,
+        editingGuestPlannerId,
+        guestPlanners,
+        plannerTitle,
+        selectedSections,
+    ]);
+
+    // Restore a temporary planner from the guest dashboard into the planner editor.
+    const loadGuestPlanner = useCallback((guestPlanner: GuestPlanner) => {
+        setAvailableSections(guestPlanner.availableSections);
+        setSelectedSections(guestPlanner.selectedSections);
+        setActivities(guestPlanner.activities);
+        setPlannerTitle(guestPlanner.title);
+        setEditingPlannerId(null);
+        setEditingGuestPlannerId(guestPlanner.id);
+    }, []);
+
+    const deleteGuestPlanner = useCallback((guestPlannerId: string) => {
+        setGuestPlanners((previousGuestPlanners) =>
+            previousGuestPlanners.filter(
+                (guestPlanner) => guestPlanner.id !== guestPlannerId
+            )
+        );
+
+        if (editingGuestPlannerId === guestPlannerId) {
+            setEditingGuestPlannerId(null);
+        }
+    }, [editingGuestPlannerId]);
 
     return (
         <PlannerContext.Provider
@@ -190,6 +287,11 @@ export function PlannerProvider({
                 setActivities,
 
                 resetPlanner,
+
+                guestPlanners,
+                saveGuestPlanner,
+                loadGuestPlanner,
+                deleteGuestPlanner,
             }}
         >
             {children}
