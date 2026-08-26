@@ -77,6 +77,7 @@ export async function getCurrentUser() {
                 jwtSecret
             ) as {
                 userId: number;
+                iat?: number;
             };
 
         // Connect to PostgreSQL.
@@ -99,6 +100,21 @@ export async function getCurrentUser() {
                     id: decoded.userId,
                 },
             });
+
+        /*
+        A reset signs the user out everywhere.
+
+        JWT's iat value is measured in seconds, so we compare
+        it with the password-change time stored in PostgreSQL.
+        */
+        if (
+            user?.passwordChangedAt &&
+            (!decoded.iat ||
+                decoded.iat * 1000 <
+                user.passwordChangedAt.getTime())
+        ) {
+            return null;
+        }
 
         return user ?? null;
 

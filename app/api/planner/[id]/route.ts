@@ -114,3 +114,62 @@ export async function PUT(
     );
   }
 }
+
+// DELETE /api/planner/:id removes one planner owned by the logged-in user.
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getCurrentUser();
+    const { id } = await params;
+    const plannerId = Number(id);
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Please log in before deleting a planner." },
+        { status: 401 }
+      );
+    }
+
+    if (!Number.isInteger(plannerId) || plannerId < 1) {
+      return NextResponse.json(
+        { success: false, message: "Planner not found." },
+        { status: 404 }
+      );
+    }
+
+    /*
+    This query checks both the planner ID and owner ID.
+    A person cannot delete another user's planner merely by changing the URL.
+    */
+    const database = await connectDatabase();
+    const planner = await database.getRepository(Planner).findOne({
+      where: { id: plannerId, user: { id: user.id } },
+    });
+
+    if (!planner) {
+      return NextResponse.json(
+        { success: false, message: "Planner not found." },
+        { status: 404 }
+      );
+    }
+
+    /*
+    PostgreSQL's foreign-key cascade removes this planner's Sections and
+    Activities automatically. We delete the parent Planner once.
+    */
+    await database.getRepository(Planner).delete(plannerId);
+
+    return NextResponse.json(
+      { success: true, message: "Planner deleted." },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Delete planner error:", error);
+    return NextResponse.json(
+      { success: false, message: "Unable to delete the planner. Please try again." },
+      { status: 500 }
+    );
+  }
+}

@@ -99,18 +99,19 @@ export async function POST(request: Request) {
             });
 
         /*
-        We deliberately use the same message for:
+        We deliberately use the same helpful message for:
         - email not found
         - incorrect password
 
-        This avoids revealing whether an email address
-        exists in the database.
+        This prevents someone from testing email addresses
+        to discover which people have accounts here.
         */
-        if (!user) {
+        // Google-only accounts have no password and cannot use password login.
+        if (!user || !user.password) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Invalid email or password.",
+                    message: "We couldn’t sign you in with those details. Check your email and password, or create an account.",
                 },
                 {
                     status: 401,
@@ -133,11 +134,23 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "Invalid email or password.",
+                    message: "We couldn’t sign you in with those details. Check your email and password, or create an account.",
                 },
                 {
                     status: 401,
                 }
+            );
+        }
+
+        // New password accounts must prove they control their email before receiving a session.
+        if (!user.emailVerifiedAt && user.emailVerificationTokenHash) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Please verify your email address before signing in.",
+                    needsEmailVerification: true,
+                },
+                { status: 403 }
             );
         }
 

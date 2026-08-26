@@ -1,0 +1,5 @@
+{
+  // Tailwind v4 directives such as @theme and @custom-variant are processed
+  // by PostCSS, not by VS Code's plain-CSS validator.
+  "css.lint.unknownAtRules": "ignore"
+}

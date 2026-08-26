@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 // Import React's useState Hook, which lets a component remember changing data.
 import { useContext, useEffect, useState } from "react";
 import { PlannerContext } from "@/context/PlannerContext";
+import { usePageLoader } from "@/components/common/PageLoader";
 
 // app/planner/page.tsx is the page shown at the URL: /planner
 export default function PlannerPage() {
@@ -16,6 +17,7 @@ export default function PlannerPage() {
     // setAgeGroup = the function used to change ageGroup after the user clicks an option.
     const [ageGroup, setAgeGroup] = useState("");
     const router = useRouter();
+    const { startLoading } = usePageLoader();
     const planner = useContext(PlannerContext);
 
     if (!planner) {
@@ -116,7 +118,10 @@ export default function PlannerPage() {
                 <Button
                     className="mt-10"
                     disabled={!ageGroup}
-                    onClick={() => router.push("/planner/sections")}
+                    onClick={() => {
+                        startLoading();
+                        router.push("/planner/sections");
+                    }}
                 >
                     Continue
                 </Button>

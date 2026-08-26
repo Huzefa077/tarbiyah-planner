@@ -3,18 +3,22 @@
 import {
     createContext,
     useCallback,
+    useEffect,
     useState,
     ReactNode,
     Dispatch,
     SetStateAction,
 } from "react";
 
+// sessionStorage belongs to one browser tab and is never sent to PostgreSQL.
+const DRAFT_STORAGE_KEY = "tarbiyah-planner-draft";
+
 /*
 Shared Planner State
 
 Sections Page
 ↓
-Configure Page
+Activity Page
 ↓
 Preview Page
 */
@@ -97,6 +101,67 @@ export function PlannerProvider({
         useState<number | null>(null);
 
     const [plannerTitle, setPlannerTitle] = useState("");
+
+    /*
+    React state disappears on a page refresh. sessionStorage lets an unfinished
+    planner survive that refresh without becoming a saved database planner.
+    We wait until the initial read finishes before writing, so an empty first
+    render cannot overwrite an existing draft.
+    */
+    const [isDraftLoaded, setIsDraftLoaded] = useState(false);
+
+    /*
+    sessionStorage is an external browser store. This one-time effect must put
+    its saved draft into React state after the page mounts, so the lint rule is
+    disabled only for this deliberate hydration step.
+    */
+    /* eslint-disable react-hooks/set-state-in-effect */
+    useEffect(() => {
+        try {
+            const savedDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+
+            if (savedDraft) {
+                const draft = JSON.parse(savedDraft);
+
+                setAvailableSections(draft.availableSections || []);
+                setSelectedSections(draft.selectedSections || []);
+                setActivities(draft.activities || {});
+                setEditingPlannerId(draft.editingPlannerId ?? null);
+                setPlannerTitle(draft.plannerTitle || "");
+            }
+        } catch {
+            // A broken old draft is ignored; the parent can start a fresh one.
+        } finally {
+            setIsDraftLoaded(true);
+        }
+    }, []);
+    /* eslint-enable react-hooks/set-state-in-effect */
+
+    useEffect(() => {
+        if (!isDraftLoaded) {
+            return;
+        }
+
+        const draft = {
+            availableSections,
+            selectedSections,
+            activities,
+            editingPlannerId,
+            plannerTitle,
+        };
+
+        sessionStorage.setItem(
+            DRAFT_STORAGE_KEY,
+            JSON.stringify(draft)
+        );
+    }, [
+        isDraftLoaded,
+        availableSections,
+        selectedSections,
+        activities,
+        editingPlannerId,
+        plannerTitle,
+    ]);
 
     const resetPlanner = useCallback(() => {
         setAvailableSections([]);

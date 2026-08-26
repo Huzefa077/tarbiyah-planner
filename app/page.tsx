@@ -1,3 +1,4 @@
+// ROUTE: / — the public landing page; it composes reusable Hero and Features sections.
 // Import the two reusable sections displayed on the home page.
 import Hero from "@/components/common/Hero";
 import Features from "@/components/common/Features";

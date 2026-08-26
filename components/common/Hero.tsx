@@ -1,32 +1,61 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function Hero() {
+export default async function Hero() {
+  // The same server-side helper used by Navbar tells us whether this visitor is logged in.
+  const user = await getCurrentUser();
+  const firstName = user?.fullName.trim().split(/\s+/)[0];
+
   return (
-    <section className="max-w-2xl text-center">
+    <section className="flex min-h-[calc(100svh-57px)] w-full max-w-2xl flex-col items-center justify-center text-center">
+      {/* The hero fills the space below the navbar; the workflow begins after scrolling. */}
       <h1 className="text-5xl font-bold">
         Tarbiyah Planner
       </h1>
 
       <p className="mt-6 text-lg text-gray-600">
-        Help your child build good habits, strong character and love for deen
-        through simple daily routines.
+        Help your child build good habits, strong character, and confidence through simple daily routines.
       </p>
 
-      <div className="mt-10 flex justify-center gap-4">
-        
-        <Link href="/register">
-          <Button >
-            Get Started
-          </Button>
-        </Link>
+      <div className="mt-10">
+        {user ? (
+          // Logged-in visitors should continue their work instead of being offered account entry again.
+          <div className="flex flex-col items-center gap-3">
+            {firstName && (
+              <p className="text-lg font-medium text-primary">
+                Hello, {firstName}
+              </p>
+            )}
 
-        <Link href="/login">
-          <Button variant="outline">
-            Login
-          </Button>
-        </Link>
+            <Link href="/dashboard">
+              <Button>
+                Go to Dashboard
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/register">
+              <Button>
+                Sign up
+              </Button>
+            </Link>
 
+            <Link href="/login">
+              <Button variant="outline">
+                Sign in
+              </Button>
+            </Link>
+
+            {/* Guests can build, preview, and print a planner without an account. */}
+            <Link href="/planner">
+              <Button variant="outline">
+                Try as Guest
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

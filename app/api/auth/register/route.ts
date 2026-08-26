@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
+import { createHash, randomBytes } from "crypto";
 
 import { z } from "zod";
 import { connectDatabase } from "@/lib/database";
 import { User } from "@/database/entities/User";
+import { sendEmailVerificationEmail } from "@/lib/email";
 
 /*
 ==========================================================
@@ -140,11 +142,21 @@ export async function POST(request: Request) {
         // 7. Create the User entity
         // ------------------------------------------------
 
+        const rawVerificationToken = randomBytes(32).toString("hex");
+
         const user =
             userRepository.create({
                 fullName,
                 email,
                 password: passwordHash,
+                emailVerifiedAt: null,
+                emailVerificationTokenHash: createHash("sha256")
+                    .update(rawVerificationToken)
+                    .digest("hex"),
+                emailVerificationExpiresAt: new Date(
+                    Date.now() + 24 * 60 * 60 * 1000
+                ),
+                emailVerificationRequestedAt: new Date(),
             });
 
 
@@ -154,6 +166,28 @@ export async function POST(request: Request) {
 
         const savedUser =
             await userRepository.save(user);
+
+        const verificationUrl = new URL("/verify-email", request.url);
+        verificationUrl.searchParams.set("token", rawVerificationToken);
+
+        try {
+            await sendEmailVerificationEmail({
+                recipient: savedUser.email,
+                verificationUrl: verificationUrl.toString(),
+            });
+        } catch (emailError) {
+            // An account that cannot receive a verification email should not remain registered.
+            await userRepository.remove(savedUser);
+            console.error("Email-verification message failed:", emailError);
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "We could not send a verification email. Please try again.",
+                },
+                { status: 503 }
+            );
+        }
 
 
         // ------------------------------------------------
@@ -171,7 +205,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
             {
                 success: true,
-                message: "Account created successfully.",
+                message: "Account created. Check your inbox to verify your email before signing in.",
                 user: {
                     id: savedUser.id,
                     fullName: savedUser.fullName,

@@ -1,3 +1,4 @@
+/* GLOBAL STYLES — one shared Tailwind theme and site-wide rules for every page. */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -117,6 +118,47 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/*
+  DARK MODE COMPATIBILITY
+
+  Older page code uses light-only Tailwind classes such as bg-white and
+  text-gray-500. This small bridge changes those existing classes whenever
+  the .dark class is on <html>, so we do not need to repeat dark: classes
+  throughout every page.
+
+  When creating new UI, prefer semantic classes such as bg-background,
+  bg-card, text-foreground, and text-muted-foreground instead.
+*/
+.dark .bg-gray-100 {
+  background-color: var(--background);
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--muted);
+}
+
+.dark .bg-white {
+  background-color: var(--card);
+}
+
+.dark .text-gray-500,
+.dark .text-gray-600 {
+  color: var(--muted-foreground);
+}
+
+.dark .text-gray-950 {
+  color: var(--foreground);
+}
+
+/* This overrides the muted link colour only while the visitor hovers it. */
+.dark .text-gray-600:hover {
+  color: var(--foreground);
+}
+
+.dark .border-gray-200 {
+  border-color: var(--border);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -136,9 +178,9 @@
    ---------------------------------------------------------
    These are the "physical page" rules. They are NOT scoped
    to @media print — they apply on screen too, so the on
-   -screen preview is sized in real mm exactly like the
-   printed page. Only cosmetic differences (shadow, rounded
-   corners, hiding UI controls) are print-only, further down.
+   -screen A4 preview uses real A4 dimensions. A3 is intentionally
+   compact on screen so it remains comfortable to use; its true A3
+   dimensions are restored by the print rules below.
    ========================================================= */
 
 /*
@@ -153,7 +195,17 @@
   margin: 0 auto;
   padding: 8mm;
   background: white;
+  /* The printable sheet stays white even when the surrounding app is dark. */
+  color: #000;
   font-family: var(--font-fredoka), sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Printed-paper controls must remain black text on white paper in either app theme. */
+.planner-sheet .no-print.bg-white {
+  background-color: white;
+  color: #000;
 }
 
 .planner-a4 .planner-sheet {
@@ -162,8 +214,8 @@
 }
 
 .planner-a3 .planner-sheet {
-  width: 420mm;
-  min-height: 297mm;
+  width: 340mm;
+  min-height: 240mm;
 }
 
 .planner-table {
@@ -228,7 +280,21 @@
 }
 
 .planner-a3 .planner-tracker-wrapper {
-  height: 195mm;
+  height: 138mm;
+}
+
+/* Auto margin takes spare height above the footer, anchoring it at the page bottom. */
+.planner-footer {
+  display: flex;
+  flex: none;
+  margin-top: auto;
+  /* 47mm gives the rewards and signature boxes comfortable handwriting room. */
+  height: 47mm;
+  min-height: 47mm;
+}
+
+.planner-footer > table {
+  height: 100%;
 }
 
 /* =========================================================
@@ -262,6 +328,16 @@
 
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* The physical printout remains a genuine A3 landscape page. */
+  .planner-a3 .planner-sheet {
+    width: 420mm;
+    min-height: 297mm;
+  }
+
+  .planner-a3 .planner-tracker-wrapper {
+    height: 195mm;
   }
 
   .planner-footer {

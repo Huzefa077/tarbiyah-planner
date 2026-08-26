@@ -1,9 +1,11 @@
 "use client";
 
+// ROUTE: /planner/activities — third wizard step, where activities are edited inside each section.
 import { useRouter } from "next/navigation";
 import { useContext, useState } from "react";
 import { PlannerContext } from "@/context/PlannerContext";
 import { Button } from "@/components/ui/button";
+import { usePageLoader } from "@/components/common/PageLoader";
 
 function createId(prefix: string) {
     return `${prefix}-${Date.now()}-${Math.random()
@@ -11,8 +13,9 @@ function createId(prefix: string) {
         .slice(2, 9)}`;
 }
 
-export default function ConfigurePage() {
+export default function ActivitiesPage() {
     const router = useRouter();
+    const { startLoading } = usePageLoader();
 
     const planner = useContext(PlannerContext);
 
@@ -66,7 +69,7 @@ export default function ConfigurePage() {
 
 /*
 The planner allows the parent to add
-a maximum of 15 activities in total.
+a maximum of 11 activities in total.
 
 These activities are independent of the
 5 fixed prayer rows shown in the preview.
@@ -74,17 +77,17 @@ These activities are independent of the
 Blank activities also count toward this limit.
 */
 
-    const MAX_TOTAL_ACTIVITIES = 11;
+    const MAX_TOTAL_ACTIVITIES = 12;
 
     /*
-    Count all activities currently added by the parent
-    across all selected sections.
+    Count only activities belonging to selected sections.
+
+    This is a second safety check. Even if old activity data somehow exists
+    in the context, an unselected section must never use an activity slot.
     */
-    const customActivityCount = Object.values(
-        activities
-    ).reduce(
-        (total, sectionActivities) =>
-            total + sectionActivities.length,
+    const customActivityCount = selectedSections.reduce(
+        (total, sectionId) =>
+            total + (activities[sectionId] || []).length,
         0
     );
 
@@ -101,7 +104,7 @@ Blank activities also count toward this limit.
         // Ignore empty input.
         if (!activityName) return;
 
-        // Do not allow more than 15 custom activities.
+        // Do not allow more than 11 activities in total.
         if (remainingActivitySlots <= 0) return;
 
         const newActivity = {
@@ -135,10 +138,10 @@ Blank activities also count toward this limit.
     its own unique ID.
 
     Blank activities also count toward the
-    5 custom activity limit.
+    11 activity limit.
     */
     function addBlankActivity(sectionId: string) {
-        // Do not allow more than 5 custom activities.
+        // Do not allow more than 11 activities in total.
         if (remainingActivitySlots <= 0) return;
 
         const newActivity = {
@@ -261,6 +264,12 @@ Blank activities also count toward this limit.
                                         })
                                     )
                                 }
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter") {
+                                        event.preventDefault();
+                                        addActivity(section.id);
+                                    }
+                                }}
                             />
 
                             {/* Activity buttons */}
@@ -379,21 +388,19 @@ Blank activities also count toward this limit.
 
                 <Button
                     variant="outline"
-                    onClick={() =>
-                        router.push(
-                            "/planner/sections"
-                        )
-                    }
+                    onClick={() => {
+                        startLoading();
+                        router.push("/planner/sections");
+                    }}
                 >
                     ← Back
                 </Button>
 
                 <Button
-                    onClick={() =>
-                        router.push(
-                            "/planner/preview"
-                        )
-                    }
+                    onClick={() => {
+                        startLoading();
+                        router.push("/planner/preview");
+                    }}
                 >
                     Continue →
                 </Button>

@@ -1,16 +1,23 @@
 "use client";
 
+// ROUTE: /register — browser-side form that creates a new parent account through the register API.
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
+import GoogleIcon from "@/components/common/GoogleIcon";
+import { usePageLoader } from "@/components/common/PageLoader";
 
 export default function RegisterPage() {
+    const { startLoading, stopLoading } = usePageLoader();
     // Store the values entered by the parent.
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    // true means show the typed password; false keeps it hidden.
+    const [showPassword, setShowPassword] = useState(false);
 
     // Used to disable the button while the request is running.
     const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +38,7 @@ export default function RegisterPage() {
         setSuccess("");
 
         setIsLoading(true);
+        startLoading();
 
         try {
             /*
@@ -83,7 +91,8 @@ export default function RegisterPage() {
             Login will create the authentication cookie.
             */
             setSuccess(
-                "Account created successfully. You can now log in."
+                data.message ||
+                "Account created. Check your inbox to verify your email before signing in."
             );
 
             // Clear the form after successful registration.
@@ -109,6 +118,7 @@ export default function RegisterPage() {
         } finally {
             // Re-enable the button.
             setIsLoading(false);
+            stopLoading();
         }
     }
 
@@ -129,6 +139,27 @@ export default function RegisterPage() {
                     className="mt-8 space-y-5"
                     onSubmit={handleSubmit}
                 >
+
+                    {/* Both sign-in and sign-up use the same Google account flow. */}
+                    <Button
+                        className="w-full"
+                        nativeButton={false}
+                        // Google OAuth must use a full browser redirect, not Next.js client navigation.
+                        render={<a href="/api/auth/google" />}
+                        type="button"
+                        variant="outline"
+                    >
+                        <span className="flex items-center gap-2">
+                            <GoogleIcon />
+                            Continue with Google
+                        </span>
+                    </Button>
+
+                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span className="h-px flex-1 bg-border" />
+                        <span>or use email</span>
+                        <span className="h-px flex-1 bg-border" />
+                    </div>
 
                     {/* Parent name */}
                     <div>
@@ -172,16 +203,33 @@ export default function RegisterPage() {
                             Password
                         </label>
 
-                        <Input
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(event) =>
-                                setPassword(
-                                    event.target.value
-                                )
-                            }
-                        />
+                        <div className="relative mt-2">
+                            <Input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter your password"
+                                className="pr-16"
+                                value={password}
+                                onChange={(event) =>
+                                    setPassword(
+                                        event.target.value
+                                    )
+                                }
+                            />
+
+                            {/* type="button" prevents this toggle from submitting the registration form. */}
+                            <button
+                                type="button"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <Eye className="size-4" />
+                                ) : (
+                                    <EyeOff className="size-4" />
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Error message */}
@@ -205,8 +253,8 @@ export default function RegisterPage() {
                         disabled={isLoading}
                     >
                         {isLoading
-                            ? "Creating Account..."
-                            : "Register"}
+                            ? "Creating account..."
+                            : "Sign up"}
                     </Button>
 
                 </form>
@@ -218,7 +266,7 @@ export default function RegisterPage() {
                         href="/login"
                         className="text-blue-600 hover:underline"
                     >
-                        Login
+                        Sign in
                     </Link>
                 </p>
 

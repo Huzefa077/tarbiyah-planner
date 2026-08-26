@@ -1,9 +1,13 @@
 "use client";
 
+// ROUTE: /planner/preview — final wizard step; previews, prints, creates, or updates a planner.
 import { useContext, useMemo, useState } from "react";
 import { PlannerContext } from "@/context/PlannerContext";
 import { Button } from "@/components/ui/button";
+import { DeletePlannerButton } from "@/components/planner/DeletePlannerButton";
 import { Input } from "@/components/ui/input";
+import { usePageLoader } from "@/components/common/PageLoader";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 const MONTH_NAMES = [
@@ -215,6 +219,7 @@ function WeeklyRewardGrid() {
 
 export default function PreviewPage() {
     const router = useRouter();
+    const { startLoading } = usePageLoader();
 
     const planner =
         useContext(PlannerContext);
@@ -231,10 +236,14 @@ export default function PreviewPage() {
         setPaperSize,
     ] = useState<"A4" | "A3">("A4");
 
-    const [title, setTitle] = useState(planner?.plannerTitle ?? "");
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState("");
     const [saveSuccess, setSaveSuccess] = useState("");
+
+    // When a success message exists, the controls use the second grid row below it.
+    const controlsRow = saveSuccess
+        ? "sm:row-start-2"
+        : "sm:row-start-1";
 
     if (!planner) {
         throw new Error(
@@ -247,6 +256,7 @@ export default function PreviewPage() {
         selectedSections,
         activities,
         editingPlannerId,
+        plannerTitle,
         setEditingPlannerId,
         setPlannerTitle,
     } = planner;
@@ -312,7 +322,7 @@ export default function PreviewPage() {
     const trackerHeight =
         paperSize === "A4"
             ? 108
-            : 195;
+            : 138;
 
     const headerHeight = 8;
 
@@ -351,22 +361,28 @@ export default function PreviewPage() {
                 {
                 method: editingPlannerId ? "PUT" : "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title, sections: sectionsToSave }),
+                body: JSON.stringify({ title: plannerTitle, sections: sectionsToSave }),
                 }
             );
             const data = await response.json();
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    setSaveError(
+                        "Guest planners are not saved. Log in or register to save this planner."
+                    );
+                    return;
+                }
+
                 setSaveError(data.message || "Unable to save the planner.");
                 return;
             }
 
             setEditingPlannerId(data.plannerId);
-            setPlannerTitle(title);
             setSaveSuccess(
                 editingPlannerId
-                    ? "Planner updated successfully."
-                    : "Planner saved successfully."
+                    ? "updated"
+                    : "created"
             );
         } catch {
             setSaveError("Unable to reach the server. Please try again.");
@@ -380,60 +396,34 @@ export default function PreviewPage() {
             className={`planner-preview-main ${paperSize === "A4"
                 ? "planner-a4"
                 : "planner-a3"
-                } min-h-screen overflow-x-auto bg-gray-100 py-8`}
+                } min-h-screen overflow-x-auto bg-gray-200 py-8 dark:bg-background`}
         >
 
             {/* =========================
                 CONTROLS
             ========================== */}
 
-            <div className="no-print mx-auto mb-6 flex max-w-262.5 items-start justify-between px-4">
+            <div className={`no-print mx-auto mb-6 flex w-full flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${
+                paperSize === "A4"
+                    ? "max-w-[297mm]"
+                    : "max-w-[340mm]"
+            }`}>
 
-                <Button
-                    variant="outline"
-                    onClick={() =>
-                        router.back()
-                    }
-                >
-                    Back
-                </Button>
-
-                <div className="flex flex-col items-end gap-2">
-
-                    <div className="flex items-center gap-2">
-                        <Input
-                            aria-label="Planner title"
-                            className="w-56 bg-white"
-                            disabled={isSaving}
-                            placeholder="Planner title"
-                            value={title}
-                            onChange={(event) => setTitle(event.target.value)}
-                        />
-
-                        <Button disabled={isSaving} onClick={handleSave}>
-                            {isSaving ? "Saving..." : "Save Planner"}
-                        </Button>
-                    </div>
-
-                    {saveError && (
-                        <p className="max-w-80 text-right text-sm text-red-600">
-                            {saveError}
-                        </p>
-                    )}
-
-                    {saveSuccess && (
-                        <p className="text-sm text-green-700">{saveSuccess}</p>
-                    )}
-
+                {/* Print setup stays above the left edge of the planner sheet. */}
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
-                        onClick={() =>
-                            window.print()
-                        }
+                        variant="outline"
+                        className="border-gray-400 dark:border-gray-600"
+                        onClick={() => {
+                            startLoading();
+                            router.back();
+                        }}
                     >
-                        Print / Save PDF
+                        ← Back
                     </Button>
 
                     <select
+                        aria-label="Paper size"
                         value={paperSize}
                         onChange={(event) =>
                             setPaperSize(
@@ -443,7 +433,7 @@ export default function PreviewPage() {
                                 | "A3"
                             )
                         }
-                        className="rounded border border-black/20 bg-white px-3 py-2 text-sm"
+                        className="h-8 rounded border border-gray-400 bg-secondary px-3 text-sm text-secondary-foreground dark:border-gray-600"
                     >
                         <option value="A4">
                             A4 Landscape
@@ -454,6 +444,75 @@ export default function PreviewPage() {
                         </option>
                     </select>
 
+                    <Button
+                        className="border-gray-400 px-5 dark:border-gray-600"
+                        onClick={() =>
+                            window.print()
+                        }
+                    >
+                        Print
+                    </Button>
+                </div>
+
+                {/* The grid keeps the message above the title, while title, save, and delete share one row. */}
+                <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[14rem_auto] sm:items-center">
+                    {saveSuccess && (
+                        <div
+                            role="status"
+                            className="w-56 rounded-lg border border-green-600/30 bg-green-600/10 px-2 py-1.5 text-[11px] leading-4 text-green-800 dark:text-green-300 sm:col-start-1 sm:row-start-1"
+                        >
+                            <p className="whitespace-nowrap">
+                                View your {saveSuccess} plan on{" "}
+                                <Link
+                                    href="/dashboard"
+                                    className="font-semibold underline underline-offset-4"
+                                >
+                                    Dashboard
+                                </Link>.
+                            </p>
+                        </div>
+                    )}
+
+                    <Input
+                        aria-label="Planner title"
+                        className={`w-56 bg-white text-gray-950 dark:bg-input/30 dark:text-foreground sm:col-start-1 ${controlsRow}`}
+                        disabled={isSaving}
+                        placeholder="Planner title"
+                        value={plannerTitle}
+                        onChange={(event) => setPlannerTitle(event.target.value)}
+                        // This input is not inside a <form>, so Enter would otherwise do nothing.
+                        // Run the same save function used by the Save Planner button.
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") {
+                                event.preventDefault();
+                                handleSave();
+                            }
+                        }}
+                    />
+
+                    <div className={`flex flex-wrap items-center gap-2 sm:col-start-2 ${controlsRow}`}>
+                        <Button
+                            className="border-gray-400 dark:border-gray-600"
+                            disabled={isSaving}
+                            onClick={handleSave}
+                        >
+                            {isSaving ? "Saving..." : "Save Planner"}
+                        </Button>
+
+                        {/* A new or guest planner has no database ID, so it cannot be deleted yet. */}
+                        {editingPlannerId && (
+                            <DeletePlannerButton
+                                plannerId={editingPlannerId}
+                                plannerTitle={plannerTitle}
+                            />
+                        )}
+                    </div>
+
+                    {saveError && (
+                        <p className="text-sm text-red-600 sm:col-start-1">
+                            {saveError}
+                        </p>
+                    )}
                 </div>
 
             </div>
@@ -468,7 +527,8 @@ export default function PreviewPage() {
                     HEADER
                 ========================== */}
 
-                <div className="flex items-start justify-between gap-4">
+                {/* Extra bottom space makes the header feel balanced with the expanded footer. */}
+                <div className="planner-header flex items-start justify-between gap-4 pb-5">
 
                     <div className="shrink-0 text-sm">
 
@@ -542,7 +602,7 @@ export default function PreviewPage() {
                     <div className="shrink-0 text-sm">
 
                         <p className="font-semibold">
-                            Focus This Month
+                            Focus of the Month
                         </p>
 
                         <div className="mt-8 w-36 border-b border-black" />
@@ -722,7 +782,8 @@ export default function PreviewPage() {
                                 <td className="border border-black align-top p-2">
                                 </td>
 
-                                <td className="border border-black p-0 align-middle h-28">
+                                {/* This taller cell stretches all footer content, including stars and signatures. */}
+                                <td className="border border-black p-0 align-middle h-33">
                                     <DailyStarsGrid
                                         dayCount={
                                             dayCount

@@ -1,14 +1,13 @@
 "use client";
 
+// Dashboard cards use this client component to restore a saved planner before editing it.
 import { useContext } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { DeletePlannerButton } from "@/components/planner/DeletePlannerButton";
 import { PlannerContext } from "@/context/PlannerContext";
 import { usePageLoader } from "@/components/common/PageLoader";
 
-type SavedPlanner = {
+type PlannerForDashboard = {
   id: number;
   title: string;
   sections: Array<{
@@ -20,7 +19,11 @@ type SavedPlanner = {
   }>;
 };
 
-export function SavedPlannerActions({ planner }: { planner: SavedPlanner }) {
+export function DashboardPlannerActions({
+  planner,
+}: {
+  planner: PlannerForDashboard;
+}) {
   const router = useRouter();
   const { startLoading } = usePageLoader();
   const plannerContext = useContext(PlannerContext);
@@ -29,10 +32,10 @@ export function SavedPlannerActions({ planner }: { planner: SavedPlanner }) {
     throw new Error("PlannerContext not found");
   }
 
-  // Keep a non-null reference that TypeScript can safely use inside editPlanner().
+  // This separate name keeps TypeScript's null check valid inside editPlanner().
   const context = plannerContext;
 
-  function editPlanner() {
+  function openPlanner(destination: "/planner/sections" | "/planner/preview") {
     const sections = planner.sections.map((section) => ({
       id: String(section.id),
       name: section.name,
@@ -51,23 +54,41 @@ export function SavedPlannerActions({ planner }: { planner: SavedPlanner }) {
       ])
     );
 
-    // Put the saved database data back into the client-side planner editor.
+    // Restore saved database data into the shared state before opening a wizard page.
     context.setAvailableSections(sections);
     context.setSelectedSections(sections.map((section) => section.id));
     context.setActivities(activities);
     context.setEditingPlannerId(planner.id);
     context.setPlannerTitle(planner.title);
     startLoading();
-    router.push("/planner/sections");
+    router.push(destination);
+  }
+
+  function editPlanner() {
+    openPlanner("/planner/sections");
+  }
+
+  function previewPlanner() {
+    openPlanner("/planner/preview");
   }
 
   return (
-    <div className="no-print flex flex-wrap items-center gap-3">
-      <Button onClick={editPlanner}>Edit planner</Button>
-      <DeletePlannerButton plannerId={planner.id} plannerTitle={planner.title} />
-      {/* <Button variant="outline" onClick={() => window.print()}>
-        Print planner
-      </Button> */}
+    <div className="mt-3 flex items-center gap-4 text-sm font-medium">
+      <button
+        type="button"
+        onClick={previewPlanner}
+        className="text-blue-800 hover:underline dark:text-blue-300"
+      >
+        Preview
+      </button>
+
+      <button
+        type="button"
+        onClick={editPlanner}
+        className="text-blue-800 hover:underline dark:text-blue-300"
+      >
+        Edit planner
+      </button>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { User } from "@/database/entities/User";
 import { Planner } from "@/database/entities/Planner";
 import { Section } from "@/database/entities/Section";
 import { Activity } from "@/database/entities/Activity";
+import { Feedback } from "@/database/entities/Feedback";
 
 /*
 ==========================================================
@@ -90,6 +91,7 @@ export const database = new DataSource({
         Planner,
         Section,
         Activity,
+        Feedback,
     ],
 
     // We are not using migrations yet.

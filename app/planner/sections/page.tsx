@@ -1,5 +1,6 @@
 "use client";
 
+// ROUTE: /planner/sections — second wizard step, where a parent chooses planner sections.
 import {
     useContext,
     useEffect,
@@ -14,6 +15,7 @@ import {
 } from "@/context/PlannerContext";
 
 import { Button } from "@/components/ui/button";
+import { usePageLoader } from "@/components/common/PageLoader";
 
 const DEFAULT_SECTIONS: PlannerSection[] = [
     {
@@ -70,6 +72,7 @@ export default function SectionsPage() {
     } = planner;
     
     const router = useRouter();
+    const { startLoading } = usePageLoader();
 
     useEffect(() => {
         if (availableSections.length === 0) {
@@ -92,6 +95,21 @@ export default function SectionsPage() {
                     (id) => id !== sectionId
                 )
             );
+
+            /*
+            An unselected section will not be saved or displayed.
+            Its activities must leave the shared state too; otherwise the
+            activity counter would still count activities the parent removed.
+            */
+            setActivities((currentActivities) => {
+                const updatedActivities = {
+                    ...currentActivities,
+                };
+
+                delete updatedActivities[sectionId];
+
+                return updatedActivities;
+            });
 
             return;
         }
@@ -286,6 +304,12 @@ export default function SectionsPage() {
                             onChange={(e) =>
                                 setCustomSection(e.target.value)
                             }
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    addCustomSection();
+                                }
+                            }}
                         />
 
                     </label>
@@ -319,9 +343,10 @@ export default function SectionsPage() {
 
                 <Button
                     className="mt-8"
-                    onClick={() =>
-                        router.push("/planner/configure")
-                    }
+                    onClick={() => {
+                        startLoading();
+                        router.push("/planner/activities");
+                    }}
                 >
                     Continue
                 </Button>
