@@ -303,7 +303,7 @@ Blank activities also count toward this limit.
                                         noSlotsLeft
                                     }
                                 >
-                                    + Add Blank Activity
+                                    + Add Blank
                                 </Button>
 
                             </div>

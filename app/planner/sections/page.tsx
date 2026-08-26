@@ -331,7 +331,7 @@ export default function SectionsPage() {
                         variant="outline"
                         onClick={addBlankSection}
                     >
-                        + Add Blank Section
+                        + Add Blank
                     </Button>
 
                 </div>
